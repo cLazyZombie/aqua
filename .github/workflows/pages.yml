@@ -1,0 +1,49 @@
+# main에 올라오면 테스트하고 빌드해 GitHub Pages(https://clazyzombie.github.io/aqua/)에 배포한다.
+# 저장소 Settings > Pages의 Source가 "GitHub Actions"여야 한다.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 배포는 한 번에 하나만 하고, 진행 중인 배포는 끊지 않는다.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # pnpm 버전은 package.json의 packageManager를 따른다.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # 시뮬레이션·교감·배치 단위 테스트. headless 캡처(e2e)는 로컬에서만 돌린다.
+      - run: pnpm test
+      # 타입 검사 + Vite 빌드. base가 "./"라 저장소 하위 경로에서도 그대로 동작한다.
+      - run: pnpm build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

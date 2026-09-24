@@ -1,0 +1,44 @@
+{
+ "giant-squid": {
+  "texture": "assets/fx/giant-squid.png",
+  "w": 156,
+  "h": 53,
+  "frames": 6
+ },
+ "submarine": {
+  "texture": "assets/fx/submarine.png",
+  "w": 76,
+  "h": 51,
+  "frames": 2
+ },
+ "anchor": {
+  "texture": "assets/fx/anchor.png",
+  "w": 36,
+  "h": 43,
+  "frames": 1
+ },
+ "chest-closed": {
+  "texture": "assets/fx/chest-closed.png",
+  "w": 36,
+  "h": 29,
+  "frames": 1
+ },
+ "chest-open": {
+  "texture": "assets/fx/chest-open.png",
+  "w": 36,
+  "h": 36,
+  "frames": 1
+ },
+ "bottle": {
+  "texture": "assets/fx/bottle.png",
+  "w": 30,
+  "h": 21,
+  "frames": 1
+ },
+ "basket": {
+  "texture": "assets/fx/basket.png",
+  "w": 26,
+  "h": 36,
+  "frames": 1
+ }
+}

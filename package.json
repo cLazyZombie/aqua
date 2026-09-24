@@ -1,0 +1,31 @@
+{
+  "name": "aqua",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.7.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "reference": "RECORD_REFERENCE=1 vitest run tests/reference.test.ts",
+    "typecheck": "tsc --noEmit",
+    "capture": "node scripts/capture.mjs",
+    "assets": "python3 scripts/build_sprites.py && python3 scripts/build_fx.py && python3 scripts/build_palette.py && python3 scripts/build_icons.py",
+    "qc": "python3 scripts/qc_assets.py",
+    "e2e": "python3 scripts/e2e.py",
+    "smoke": "node scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "@types/three": "^0.186.0",
+    "playwright": "^1.63.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}

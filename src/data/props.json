@@ -1,0 +1,725 @@
+[
+ {
+  "texture": "assets/fx/reef-00.png",
+  "w": 29,
+  "h": 51,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-01.png",
+  "w": 31,
+  "h": 48,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-02.png",
+  "w": 28,
+  "h": 46,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-03.png",
+  "w": 35,
+  "h": 28,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-04.png",
+  "w": 32,
+  "h": 32,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-05.png",
+  "w": 41,
+  "h": 44,
+  "frames": 8,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-06.png",
+  "w": 48,
+  "h": 50,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-07.png",
+  "w": 27,
+  "h": 43,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-09.png",
+  "w": 27,
+  "h": 40,
+  "frames": 8,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-10.png",
+  "w": 32,
+  "h": 31,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/reef-11.png",
+  "w": 22,
+  "h": 49,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-00.png",
+  "w": 80,
+  "h": 181,
+  "frames": 8,
+  "kind": "tall",
+  "scenes": [
+   "reef",
+   "kelp",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-01.png",
+  "w": 82,
+  "h": 181,
+  "frames": 8,
+  "kind": "tall",
+  "scenes": [
+   "reef",
+   "kelp",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-02.png",
+  "w": 54,
+  "h": 179,
+  "frames": 8,
+  "kind": "tall",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-03.png",
+  "w": 49,
+  "h": 108,
+  "frames": 8,
+  "kind": "tall",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-00.png",
+  "w": 36,
+  "h": 30,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-01.png",
+  "w": 26,
+  "h": 60,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-02.png",
+  "w": 30,
+  "h": 48,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-03.png",
+  "w": 34,
+  "h": 40,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-04.png",
+  "w": 40,
+  "h": 39,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-05.png",
+  "w": 33,
+  "h": 48,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-06.png",
+  "w": 33,
+  "h": 52,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/coral-07.png",
+  "w": 37,
+  "h": 47,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/weed-00.png",
+  "w": 64,
+  "h": 148,
+  "frames": 8,
+  "kind": "tall",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/weed-01.png",
+  "w": 65,
+  "h": 85,
+  "frames": 8,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins",
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/weed-02.png",
+  "w": 66,
+  "h": 129,
+  "frames": 8,
+  "kind": "tall",
+  "scenes": [
+   "kelp",
+   "wreck",
+   "reef"
+  ]
+ },
+ {
+  "texture": "assets/fx/weed-03.png",
+  "w": 73,
+  "h": 53,
+  "frames": 8,
+  "kind": "prop",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-00.png",
+  "w": 42,
+  "h": 42,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-01.png",
+  "w": 35,
+  "h": 32,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-02.png",
+  "w": 32,
+  "h": 43,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-03.png",
+  "w": 35,
+  "h": 59,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-04.png",
+  "w": 23,
+  "h": 57,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-05.png",
+  "w": 49,
+  "h": 57,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-06.png",
+  "w": 38,
+  "h": 39,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/kelp-set-07.png",
+  "w": 33,
+  "h": 30,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "kelp"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-00.png",
+  "w": 38,
+  "h": 32,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-01.png",
+  "w": 52,
+  "h": 42,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-02.png",
+  "w": 34,
+  "h": 33,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-03.png",
+  "w": 37,
+  "h": 26,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-04.png",
+  "w": 44,
+  "h": 44,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-05.png",
+  "w": 22,
+  "h": 46,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-06.png",
+  "w": 21,
+  "h": 45,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/wreck-set-07.png",
+  "w": 46,
+  "h": 34,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "wreck"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-00.png",
+  "w": 27,
+  "h": 54,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-01.png",
+  "w": 43,
+  "h": 25,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-02.png",
+  "w": 35,
+  "h": 48,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-03.png",
+  "w": 29,
+  "h": 52,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-04.png",
+  "w": 38,
+  "h": 27,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-05.png",
+  "w": 27,
+  "h": 64,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-06.png",
+  "w": 34,
+  "h": 32,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ruins-set-07.png",
+  "w": 39,
+  "h": 39,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-00.png",
+  "w": 48,
+  "h": 61,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-01.png",
+  "w": 39,
+  "h": 58,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-02.png",
+  "w": 43,
+  "h": 45,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-03.png",
+  "w": 38,
+  "h": 30,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-04.png",
+  "w": 29,
+  "h": 71,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-05.png",
+  "w": 31,
+  "h": 38,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-06.png",
+  "w": 43,
+  "h": 48,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/ice-set-07.png",
+  "w": 29,
+  "h": 70,
+  "frames": 1,
+  "kind": "prop",
+  "scenes": [
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/clam-hard.png",
+  "w": 32,
+  "h": 34,
+  "frames": 3,
+  "kind": "clam",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/clam-venus.png",
+  "w": 35,
+  "h": 39,
+  "frames": 3,
+  "kind": "clam",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ },
+ {
+  "texture": "assets/fx/clam-oyster.png",
+  "w": 34,
+  "h": 37,
+  "frames": 3,
+  "kind": "clam",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/clam-scallop.png",
+  "w": 32,
+  "h": 35,
+  "frames": 3,
+  "kind": "clam",
+  "scenes": [
+   "reef",
+   "kelp",
+   "wreck",
+   "ruins",
+   "ice"
+  ]
+ },
+ {
+  "texture": "assets/fx/clam-pearl.png",
+  "w": 34,
+  "h": 31,
+  "frames": 3,
+  "kind": "clam",
+  "scenes": [
+   "reef",
+   "wreck",
+   "ruins"
+  ]
+ }
+]

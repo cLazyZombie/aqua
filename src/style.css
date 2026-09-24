@@ -1,0 +1,44 @@
+/* 글꼴(Galmuri, GalmuriBold)은 main.ts가 FontFace로 읽는다(배포 경로와 무관하게). */
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #03091a;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  cursor: default;
+  user-select: none;
+}
+
+#view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  image-rendering: pixelated;
+}
+
+#ui {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* 엔진 UI Text: 상자 안 세로 가운데, 한 줄, 번짐 없는 그림자. */
+.ui-text {
+  position: absolute;
+  align-items: center;
+  white-space: pre;
+  overflow: visible;
+  line-height: 1;
+  -webkit-font-smoothing: none;
+  font-smooth: never;
+}

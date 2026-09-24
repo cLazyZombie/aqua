@@ -1,0 +1,19 @@
+{
+  "name": "Aqua 픽셀 아쿠아리움",
+  "short_name": "Aqua",
+  "description": "해양 생물 231종이 사는 16비트 픽셀 아쿠아리움. 먹이를 주고 교감하며 낮밤과 사건을 구경한다.",
+  "lang": "ko",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "landscape",
+  "background_color": "#03091a",
+  "theme_color": "#0c4076",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
