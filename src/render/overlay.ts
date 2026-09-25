@@ -285,7 +285,9 @@ function appendTitle(frame: Frame, view: View, game: Aquarium): void {
     shadow: { color: [4, 16, 44, blink], dx: px(2), dy: px(2) },
     align: "center",
   });
-  // CC BY 음악 저작자 표기(나머지 음원은 CC0, 자세한 목록은 assets/audio/CREDITS.txt).
+  // CC BY 음악 저작자 표기(나머지 음원은 CC0, 자세한 목록은 assets/audio/CREDITS.txt). 바닥 소품 위에서도 읽히게 옅은 띠를 깐다.
+  const screen = view.shift(0);
+  frame.layers.push(solids("credit-band", "alpha", [pixelRect(screen[0] + VIEW_LEFT, screen[1] + HEIGHT - 17, VIEW_WIDTH, 17, fullUv(), rgba(4, 14, 32, 0.5), 45)]));
   frame.texts.push({
     x: 0,
     y: at(506),

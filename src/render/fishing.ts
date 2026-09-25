@@ -6,10 +6,12 @@ import type { Frame, Rgba, Sprite } from "./draw";
 import { fullUv, mix, pixelRect, rgb, rgba, roundHalfAway, solids } from "./draw";
 import { label, textWidth } from "./overlay";
 import type { View } from "./scene";
-import { type Aquarium, HEIGHT, SURFACE_Y, WIDTH } from "./simapi";
+import { type Aquarium, FLOOR_Y, HEIGHT, SURFACE_Y, WIDTH } from "./simapi";
 import { GOOD_BAND, PERFECT_BAND, ROD_TIP, SWEET, TENSION_RED, meterAt } from "../sim/fishing";
 
 const GAUGE_W = 120;
+/// 게이지·안내 뒤 판의 폭이다.
+const PANEL_W = 212;
 // 낚시 버튼(아래 가운데) 위에 게이지·알림·안내를 쌓는다.
 const GAUGE_Y = HEIGHT - 60;
 
@@ -76,14 +78,21 @@ export function appendFishing(frame: Frame, view: View, game: Aquarium): void {
     world.push(pixelRect(bx - 1 + wiggle, by + 1, 1, 3, fullUv(), rgba(236, 120, 150, 1), 9.1));
     world.push(pixelRect(bx + 1, by + 2 + wiggle, 1, 2, fullUv(), rgba(236, 120, 150, 1), 9.1));
   }
-  // 겨눈 자리: 수면 위 작은 ▼(깜빡임).
+  // 겨눈 자리: 밝은 수면에서도 보이게 어두운 테두리를 두른 ▼와, 수면에서 겨눈 깊이까지 내려가는 점선 안내선.
   if ((phase === "aim" || phase === "charge") && game.pointer) {
     const x = roundHalfAway(phase === "charge" ? fishing.aimX : Math.min(WIDTH - 20, Math.max(20, game.pointer[0])));
-    const on = Math.sin(time * 8) > -0.3 ? 0.95 : 0.4;
-    const mark = rgba(255, 240, 150, on);
-    world.push(pixelRect(x - 2, SURFACE_Y - 8, 5, 1, fullUv(), mark, 9));
-    world.push(pixelRect(x - 1, SURFACE_Y - 7, 3, 1, fullUv(), mark, 9));
-    world.push(pixelRect(x, SURFACE_Y - 6, 1, 1, fullUv(), mark, 9));
+    const on = Math.sin(time * 8) > -0.3 ? 1 : 0.55;
+    const mark = rgba(255, 236, 120, on);
+    const edge = rgba(20, 30, 45, 0.85 * on);
+    const top = SURFACE_Y - 11;
+    world.push(pixelRect(x - 4, top - 1, 9, 1, fullUv(), edge, 8.9));
+    for (let row = 0; row < 4; row += 1) {
+      world.push(pixelRect(x - 4 + row, top + row, 9 - row * 2, 1, fullUv(), edge, 8.9));
+      world.push(pixelRect(x - 3 + row, top + row, 7 - row * 2, 1, fullUv(), mark, 9));
+    }
+    world.push(pixelRect(x, top + 4, 1, 1, fullUv(), edge, 8.9));
+    const depth = Math.min(FLOOR_Y - 14, Math.max(SURFACE_Y + 8, game.pointer[1]));
+    for (let y = SURFACE_Y + 2; y < depth; y += 4) world.push(pixelRect(x, y, 1, 2, fullUv(), rgba(255, 236, 120, 0.45 * on), 8.5));
   }
   frame.layers.push(solids("fishing-line", "alpha", world));
 
@@ -92,6 +101,15 @@ export function appendFishing(frame: Frame, view: View, game: Aquarium): void {
   const ui: Sprite[] = [];
   const left = roundHalfAway(screen[0] + WIDTH / 2 - GAUGE_W / 2);
   const top = screen[1] + GAUGE_Y;
+  // 게이지·이름·안내 뒤에 반투명 판을 깔아 모래·소품 위에서도 잘 읽히게 한다.
+  const hint = hintOf(phase);
+  const gauge = phase === "charge" || (phase === "fight" && fishing.profile !== null);
+  if (hint || gauge) {
+    const panelTop = phase === "fight" ? top - 15 : gauge ? top - 5 : top + 8;
+    const panelLeft = roundHalfAway(screen[0] + WIDTH / 2 - PANEL_W / 2);
+    ui.push(pixelRect(panelLeft - 1, panelTop - 1, PANEL_W + 2, top + 24 - panelTop + 2, fullUv(), rgba(150, 220, 240, 0.35), 49));
+    ui.push(pixelRect(panelLeft, panelTop, PANEL_W, top + 24 - panelTop, fullUv(), rgba(4, 14, 32, 0.62), 49.5));
+  }
   if (phase === "charge") {
     // 힘 게이지: 좋은 칸(노랑)과 완벽 칸(초록) 사이에서 떼면 겨눈 곳에 정확히 떨어진다.
     ui.push(pixelRect(left - 1, top - 1, GAUGE_W + 2, 8, fullUv(), rgba(4, 14, 32, 0.85), 50));
@@ -126,8 +144,7 @@ export function appendFishing(frame: Frame, view: View, game: Aquarium): void {
     const color = colors[note.tone];
     label(frame, view, [screen[0] + WIDTH / 2 - 100, top - 28, 200, 13], note.text, 11, [color[0], color[1], color[2], Math.trunc(255 * alpha)], "center");
   }
-  const hint = hintOf(phase, game.look.touch);
-  if (hint) label(frame, view, [screen[0] + WIDTH / 2 - 150, top + 11, 300, 10], hint, 8, [200, 226, 238, 200], "center");
+  if (hint) label(frame, view, [screen[0] + WIDTH / 2 - PANEL_W / 2, top + 11, PANEL_W, 11], hint, 9, [220, 238, 246, 245], "center");
   // 결과 자막: 화면 위 가운데(사건 자막 자리).
   const result = fishing.result;
   if (result) {
@@ -147,19 +164,19 @@ export function appendFishing(frame: Frame, view: View, game: Aquarium): void {
   }
 }
 
-function hintOf(phase: string, touch: boolean): string | null {
-  const press = touch ? "누르고" : "누르고";
+/// 단계마다 짧은 안내다(판 폭 안에 들어가게 짧게 쓴다).
+function hintOf(phase: string): string | null {
   switch (phase) {
     case "aim":
-      return `겨눈 곳을 ${press} 있다가 초록 칸에서 떼면 던져요`;
+      return "겨눈 곳을 누르고, 초록 칸에서 떼기";
     case "charge":
       return "초록 칸에서 떼기!";
     case "sink":
-      return "탭하면 그 깊이에서 멈춰요";
+      return "탭하면 그 깊이에 멈춰요";
     case "wait":
-      return "찌가 푹 잠길 때 탭! · 길게 누르면 걷어요";
+      return "찌가 푹 잠기면 탭! · 길게 눌러 걷기";
     case "fight":
-      return "누르면 감기 · 떼면 풀기 · 빨간 칸에 오래 두면 끊어져요";
+      return "누르면 감기 · 떼면 풀기 · 빨간 칸 조심";
     default:
       return null;
   }

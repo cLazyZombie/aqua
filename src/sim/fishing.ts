@@ -169,7 +169,6 @@ export class Fishing {
     if (this.phase === "off") {
       this.phase = "aim";
       this.timer = 0;
-      this.note = { text: "누르고 있다가 떼서 던지기", tone: "info", timer: 2.5 };
       return;
     }
     this.letGo(game);

@@ -107,6 +107,7 @@ export const SCENARIOS = [
   { name: "fishing-charge", seconds: 20.95, started: true, pointer: "300,120", fishingAt: 20, fishPressAt: 20.3, hover: false },
   { name: "fishing-wait", seconds: 26, started: true, pointer: "300,120", fishingAt: 20, fishPressAt: 20.3, fishReleaseAt: 20.82, hover: false },
   { name: "fishing-fight", seconds: 21.6, started: true, pointer: "300,150", cast: "bluefin-tuna", castAt: 20, fishHookAt: 20.2, fishPressAt: 20.6, hover: false },
+  { name: "fishing-landed", seconds: 30.4, started: true, pointer: "300,150", cast: "clownfish", castAt: 20, fishHookAt: 20.2, fishPressAt: 20.6, hover: false },
   { name: "fishing-fight-slack", seconds: 22.4, started: true, pointer: "300,150", cast: "clownfish", castAt: 20, fishHookAt: 20.2, hover: false },
   // 먼 층 생물은 불투명하다: 켈프 숲 앞 먼 층에 상어를 불러 뒤 배경이 몸을 뚫고 보이지 않는지 본다.
   { name: "far-shark", seconds: 20.2, started: true, pointer: "120,120", cast: "leopard-shark", castAt: 20, depth: 0, scene: "kelp", hover: false },
