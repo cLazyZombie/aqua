@@ -159,3 +159,30 @@ body {
     transform: rotate(-90deg);
   }
 }
+
+/* 낚시 버튼: 아래쪽 가운데(홈 표시줄·둥근 모서리 안쪽). 낚시 중에는 노란 테로 켜진 것을 보인다. */
+#fish-button {
+  position: absolute;
+  left: 50%;
+  bottom: calc(6px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid rgba(150, 220, 240, 0.7);
+  border-radius: 10px;
+  background: rgba(8, 24, 46, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+#fish-button.on {
+  border: 2px solid #ffe07a;
+  background: rgba(40, 70, 100, 0.8);
+}
+
+#fish-button[hidden] {
+  display: none;
+}

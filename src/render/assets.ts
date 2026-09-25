@@ -5,6 +5,7 @@ import * as THREE from "three";
 import propsJson from "../data/props.json";
 import eventsJson from "../data/events.json";
 import type { Species } from "../sim/catalog";
+import { TRASH_INFO } from "../sim/trash";
 import { type Placement, type SceneStyle, SCENE_STYLES, makeLayout } from "./scenes";
 
 interface SheetJson {
@@ -80,6 +81,8 @@ export interface SceneAssets {
   basket: Sheet;
   shell: Sheet;
   duck: Sheet;
+  /** 바다 쓰레기 8종(src/data/trash.json 순서)이다. */
+  trash: Sheet[];
   props: Prop[];
   species: SpeciesArt[];
 }
@@ -235,6 +238,7 @@ export async function loadSceneAssets(catalog: Species[], sceneId: string, layou
     basket: await sheet("basket", { texture: "assets/fx/basket.png", w: 20, h: 24, frames: 1 }),
     shell: await sheet("shell", { texture: "assets/fx/shell.png", w: 18, h: 14, frames: 1 }),
     duck: await sheet("duck", { texture: "assets/fx/duck.png", w: 16, h: 14, frames: 1 }),
+    trash: await Promise.all(TRASH_INFO.map(async (entry) => ({ texture: await cache.get(entry.texture), w: entry.w, h: entry.h, frames: 1 }))),
     props: loadedProps,
     species: await species,
   };

@@ -342,3 +342,14 @@ A pixel art foreground prop strip for a 2D side-view aquarium game, 16-bit SNES 
 ```text
 Use the built-in image_gen tool exactly once to EDIT the attached image. Keep the exact same flying fish: the same retro 16-bit SNES-era pixel art style with chunky square pixels of identical size, the same blue and silver colors, the same clean dark outline, the same head, big eye, body, forked tail, size and framing, and a fully transparent background. Only change its two huge wing-like pectoral fins: the fish is now SWIMMING UNDERWATER, so both wing fins are FOLDED back tightly along the sides of its body, lying flat against the body and pointing toward the tail, with only a slim streamlined edge of the folded fin visible along the middle of the body. No fin sticks up above the back or down below the belly except the small normal dorsal and pelvic fins. Strict side view profile, head pointing to the RIGHT edge, tail on the LEFT, body horizontal.
 ```
+
+## 15차: 바다 쓰레기
+
+`art/events/trash.png`(가로 1536×1024, 두 줄 네 칸). `scripts/build_fx.py`의 `trash()`가 연결 요소로 나눠 위 줄 왼쪽부터 캔·페트병·비닐봉지·장화·타이어·유리병·마스크·폐그물 순으로 굽는다.
+
+```text
+A pixel art sprite sheet for a 2D side-view aquarium game showing EIGHT separate pieces of ocean trash, side by side in two rows of four with wide empty gaps between them (none touching another), each lying on an invisible flat baseline: 1) a dented red soda can lying on its side, 2) a clear plastic PET water bottle with a blue cap lying on its side, 3) a crumpled white plastic shopping bag, 4) an old worn brown rubber boot lying on its side, 5) a small black rubber tire standing upright seen from the side, 6) a green glass bottle lying on its side, 7) a disposable light blue face mask with white ear loops, 8) a tangled clump of orange fishing net with a small white float. Each item is about the same size. They are objects with NO eyes and NO faces. 16-bit SNES era style, chunky LOW-RESOLUTION pixels (every pixel a crisp large square block), bold dark outlines, cel shading with 3 tones per color plus one small highlight, vivid saturated colors, no anti-aliasing, no soft gradients, no dithering.
+Background: fully transparent background (alpha) everywhere. No water, no fish, no creatures, no sand, no ground, no text, no shadows, no labels.
+```
+
+낚싯줄·찌·미끼·게이지와 낚시 버튼 아이콘은 그림 없이 코드로 그린다(`src/render/fishing.ts`, `src/main.ts`).

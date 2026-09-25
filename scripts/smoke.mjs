@@ -70,13 +70,28 @@ async function mobile(browser, url, errors) {
   await page.locator("#menu-button").tap();
   await page.locator('#menu button[data-action="flashlight"]').tap();
   if (!(await live()).flashlight) errors.push("[mobile] menu should turn on the flashlight");
+  // 낚시(모바일): 아래 가운데 버튼으로 켜고, 누르고 있다가 떼서 던지고, 다시 버튼으로 끈다.
+  await page.locator("#menu").evaluate((menu) => (menu.hidden = true));
+  await page.locator("#fish-button").tap();
+  await page.waitForTimeout(150);
+  const rod = await live();
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x: 560, y: 150 }] });
+  await page.waitForTimeout(500);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await page.waitForTimeout(900);
+  const thrown = await live();
+  if (rod.fishing !== "aim" || !["fly", "sink", "wait"].includes(thrown.fishing)) errors.push(`[mobile] fishing failed: ${rod.fishing} -> ${thrown.fishing}`);
+  await page.screenshot({ path: resolve(OUTPUT, "smoke-mobile-fishing.png") });
+  await page.locator("#fish-button").tap();
+  await page.waitForTimeout(100);
+  if ((await live()).fishing !== "off") errors.push("[mobile] fish button should turn fishing off");
   // 세로로 들면 가로로 돌려 달라는 안내가 뜬다.
   await page.setViewportSize({ width: 402, height: 874 });
   await page.waitForTimeout(300);
   const rotate = await page.evaluate(() => getComputedStyle(document.getElementById("rotate")).display);
   if (rotate === "none") errors.push("[mobile] portrait should show the rotate hint");
   await page.screenshot({ path: resolve(OUTPUT, "smoke-mobile-portrait.png") });
-  console.log(`mobile: title tap, food ${fed.food}, long press ripples ${held.ripples} hover ${held.hover}, dex menu, flashlight, rotate hint ${rotate}`);
+  console.log(`mobile: title tap, food ${fed.food}, long press ripples ${held.ripples} hover ${held.hover}, dex menu, flashlight, fishing ${rod.fishing}->${thrown.fishing}, rotate hint ${rotate}`);
   await context.close();
 }
 
@@ -145,6 +160,21 @@ try {
     .catch(async () => page.evaluate(() => window.__aquaSound?.state() ?? null));
   console.log(`sound: ${JSON.stringify(playing)}`);
   if (!playing || playing.context !== "running" || playing.music === null || !playing.lapping || !playing.bubbles) errors.push(`sound did not start: ${JSON.stringify(playing)}`);
+  // 낚시(데스크톱): G로 켜고, 누르고 있다가 떼서 던지고, G로 끈다.
+  await page.keyboard.press("KeyG");
+  await page.waitForTimeout(150);
+  const fishOn = await page.evaluate(() => window.__aquaLive().fishing);
+  await page.mouse.move(640, 250);
+  await page.mouse.down();
+  await page.waitForTimeout(500);
+  await page.mouse.up();
+  await page.waitForTimeout(900);
+  const cast = await page.evaluate(() => window.__aquaLive().fishing);
+  if (fishOn !== "aim" || !["fly", "sink", "wait"].includes(cast)) errors.push(`fishing (desktop) failed: ${fishOn} -> ${cast}`);
+  await page.screenshot({ path: resolve(OUTPUT, "smoke-fishing.png") });
+  await page.keyboard.press("KeyG");
+  await page.waitForTimeout(100);
+  if ((await page.evaluate(() => window.__aquaLive().fishing)) !== "off") errors.push("fishing should turn off with G");
   await page.keyboard.press("KeyM");
   await page.waitForTimeout(700);
   const muted = await page.evaluate(() => ({ state: window.__aquaSound?.state(), toast: document.getElementById("toast")?.textContent }));

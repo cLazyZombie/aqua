@@ -9,6 +9,8 @@ import { f32 } from "./num";
 const STORAGE_KEY = "aqua.dex";
 /** 방문자 단골 개체별 방문 횟수를 두는 저장 키다. */
 const VISITS_KEY = "aqua.dex.visits";
+/** 낚시로 잡은 종별 횟수를 두는 저장 키다. */
+const CAUGHT_KEY = "aqua.dex.caught";
 
 /** 도감 한 칸(생물 또는 사건)이다. */
 export interface DexEntry {
@@ -39,6 +41,8 @@ export class Dex {
   visits = new Map<string, number>();
   /** 이번 방문을 이미 센 생물 id다(저장하지 않는다). */
   counted = new Set<number>();
+  /** 낚시로 잡은(놓아 준) 종 id별 횟수다. */
+  caught = new Map<string, number>();
 
   /** `persist`면 저장된 기록을 읽고 이후 기록도 저장한다. 읽기 실패는 빈 도감으로 시작한다. */
   static load(persist: boolean): Dex {
@@ -54,6 +58,15 @@ export class Dex {
         if (Array.isArray(parsed)) {
           for (const key of parsed) {
             if (typeof key === "string") dex.seen.add(key);
+          }
+        }
+      }
+      const caught = storage()?.getItem(CAUGHT_KEY);
+      if (caught) {
+        const parsed: unknown = JSON.parse(caught);
+        if (parsed && typeof parsed === "object") {
+          for (const [key, count] of Object.entries(parsed as Record<string, unknown>)) {
+            if (typeof count === "number") dex.caught.set(key, count);
           }
         }
       }
@@ -78,6 +91,18 @@ export class Dex {
     if (this.persist) {
       try {
         storage()?.setItem(VISITS_KEY, JSON.stringify(Object.fromEntries([...this.visits].sort())));
+      } catch {
+        // 저장 실패는 무시한다.
+      }
+    }
+  }
+
+  /** 낚시로 한 종을 잡았다(놓아 줬다). 도감에 ◎로 남는다. */
+  catch(species: string): void {
+    this.caught.set(species, (this.caught.get(species) ?? 0) + 1);
+    if (this.persist) {
+      try {
+        storage()?.setItem(CAUGHT_KEY, JSON.stringify(Object.fromEntries([...this.caught].sort())));
       } catch {
         // 저장 실패는 무시한다.
       }
@@ -127,7 +152,9 @@ export function dexEntries(game: Aquarium): DexEntry[] {
     // 희귀 색 변이를 본 종에는 ★, 방문자에는 지금까지 온 횟수를 붙인다.
     const rare = [1, 2, 3].some((variant) => game.dex.has(`variant:${entry.id}:${variant}`));
     const visits = game.dex.visitsOf(entry.id);
-    const name = `${entry.nameKo}${rare ? " ★" : ""}${visits > 1 ? ` ×${visits}` : ""}`;
+    // 낚시로 잡은 종에는 ◎를 붙인다.
+    const caught = game.dex.caught.has(entry.id);
+    const name = `${entry.nameKo}${rare ? " ★" : ""}${visits > 1 ? ` ×${visits}` : ""}${caught ? " ◎" : ""}`;
     entries.push({ key, name, seen: game.dex.has(key) });
   }
   for (const kind of EVENT_KINDS) {

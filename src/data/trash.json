@@ -1,0 +1,58 @@
+[
+ {
+  "kind": "can",
+  "name": "찌그러진 캔",
+  "texture": "assets/fx/trash-can.png",
+  "w": 16,
+  "h": 10
+ },
+ {
+  "kind": "bottle",
+  "name": "페트병",
+  "texture": "assets/fx/trash-bottle.png",
+  "w": 18,
+  "h": 9
+ },
+ {
+  "kind": "bag",
+  "name": "비닐봉지",
+  "texture": "assets/fx/trash-bag.png",
+  "w": 16,
+  "h": 18
+ },
+ {
+  "kind": "boot",
+  "name": "낡은 장화",
+  "texture": "assets/fx/trash-boot.png",
+  "w": 17,
+  "h": 11
+ },
+ {
+  "kind": "tire",
+  "name": "폐타이어",
+  "texture": "assets/fx/trash-tire.png",
+  "w": 15,
+  "h": 16
+ },
+ {
+  "kind": "glass",
+  "name": "유리병",
+  "texture": "assets/fx/trash-glass.png",
+  "w": 18,
+  "h": 8
+ },
+ {
+  "kind": "mask",
+  "name": "일회용 마스크",
+  "texture": "assets/fx/trash-mask.png",
+  "w": 17,
+  "h": 12
+ },
+ {
+  "kind": "net",
+  "name": "폐그물",
+  "texture": "assets/fx/trash-net.png",
+  "w": 19,
+  "h": 12
+ }
+]

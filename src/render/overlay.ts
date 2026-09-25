@@ -26,6 +26,18 @@ export function appendScreen(frame: Frame, view: View, game: Aquarium, assets: S
     }
     frame.layers.push(solids("time-of-day", "multiply", rows));
   }
+  // 쓰레기가 쌓이면 물이 갈색 섞인 초록으로 탁해진다(깊을수록 조금 더). 치우면 서서히 맑아진다.
+  const gloom = game.litter.gloom;
+  if (gloom > 0.01) {
+    const murk: Sprite[] = [];
+    for (let row = 0; row < HEIGHT / 2; row++) {
+      const y = row * 2;
+      const deep = 0.7 + 0.3 * (y / HEIGHT);
+      murk.push(pixelRect(screen[0] + VIEW_LEFT, screen[1] + y, VIEW_WIDTH, 2, fullUv(), rgb(mix([255, 255, 255], [150, 166, 98], gloom * deep), 1), 30.5));
+    }
+    frame.layers.push(solids("pollution", "multiply", murk));
+    frame.layers.push(solids("pollution-haze", "alpha", [pixelRect(screen[0] + VIEW_LEFT, screen[1], VIEW_WIDTH, HEIGHT, fullUv(), rgba(96, 104, 58, 0.2 * gloom), 30.6)]));
+  }
   if (twilight > 0.01 || golden > 0.01) {
     const tone = mix([255, 128, 70], [255, 190, 60], golden / Math.max(0.01, golden + twilight));
     const strength = Math.max(0.6 * twilight, 0.55 * golden);
@@ -219,7 +231,8 @@ function appendDex(frame: Frame, view: View, game: Aquarium): void {
   const pages = Math.max(1, Math.ceil(entries.length / PER_PAGE));
   const page = game.dex.page % pages;
   const hint = game.look.touch ? "양옆을 눌러 넘기기, 가운데를 눌러 닫기" : "←→ 넘기기, Tab 닫기";
-  const title = `목격 도감  ${seen}/${entries.length}   ◀ ${page + 1}/${pages} ▶   (${hint})`;
+  const caught = game.dex.caught.size;
+  const title = `목격 도감  ${seen}/${entries.length}${caught > 0 ? `  낚시 ${caught}종` : ""}   ◀ ${page + 1}/${pages} ▶   (${hint})`;
   label(frame, view, [left, top + 3, width, 14], title, 11, [255, 236, 160, 255], "center");
   const columnWidth = (width - 20) / 3;
   entries.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE).forEach((entry, slot) => {

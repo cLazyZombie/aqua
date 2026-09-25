@@ -513,6 +513,38 @@ def scenes() -> list[str]:
     return built
 
 
+# 쓰레기 8종: 원본(art/events/trash.png)의 두 줄 네 칸 순서와 게임 폭(px)이다.
+TRASH = [("can", "찌그러진 캔", 16), ("bottle", "페트병", 18), ("bag", "비닐봉지", 16), ("boot", "낡은 장화", 17),
+         ("tire", "폐타이어", 15), ("glass", "유리병", 18), ("mask", "일회용 마스크", 17), ("net", "폐그물", 19)]
+
+
+def trash() -> list[dict]:
+    """쓰레기 원본을 연결 요소로 나눠(위 줄 왼쪽부터) 종류마다 게임 폭으로 굽는다."""
+    raw = np.array(Image.open(ART / "events/trash.png").convert("RGBA"))
+    mask = raw[..., 3] > 170
+    pieces = component_groups(mask)
+    if len(pieces) != len(TRASH):
+        raise SystemExit(f"trash.png: expected {len(TRASH)} items, got {len(pieces)}")
+    half = raw.shape[0] / 2
+    def place(piece: np.ndarray) -> tuple[int, float]:
+        rows, cols = np.nonzero(piece)
+        return (0 if rows.mean() < half else 1, cols.mean())
+    pieces.sort(key=place)
+    records = []
+    for (kind, name, width), piece in zip(TRASH, pieces):
+        rows = np.nonzero(piece.any(1))[0]
+        cols = np.nonzero(piece.any(0))[0]
+        y0, y1, x0, x1 = rows.min(), rows.max() + 1, cols.min(), cols.max() + 1
+        sub = piece[y0:y1, x0:x1]
+        index, palette = quantize_opaque(raw[y0:y1, x0:x1, :3], sub, 16)
+        small = despeckle(clean(downsample(index, width)), palette)
+        sprite = main_body(to_rgba(small, palette, outline_color(palette)))
+        file = f"trash-{kind}.png"
+        Image.fromarray(sprite, "RGBA").save(OUT / file)
+        records.append({"kind": kind, "name": name, "texture": f"assets/fx/{file}", "w": int(sprite.shape[1]), "h": int(sprite.shape[0])})
+    return records
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     background()
@@ -555,6 +587,8 @@ def main() -> None:
     data.mkdir(parents=True, exist_ok=True)
     (data / "props.json").write_text(json.dumps(records, indent=1) + "\n")
     (data / "scenes.json").write_text(json.dumps(built) + "\n")
+    litter = trash()
+    (data / "trash.json").write_text(json.dumps(litter, indent=1, ensure_ascii=False) + "\n")
     print(f"scenes: {', '.join(built)}; props: {len(records)}")
     print("FX build done")
 

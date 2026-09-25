@@ -8,6 +8,31 @@ import { label, textWidth } from "./overlay";
 import { outlineOf, pixelsOf, solidAt } from "./pixels";
 import type { View } from "./scene";
 import { type Actor, type Aquarium, INDIVIDUAL_NAMES, VARIANT_NAMES } from "./simapi";
+import { trashSprite } from "./litter";
+
+/// 월드 좌표 (x, y)의 쓰레기 id다. `pad`만큼 둘레를 넓혀 잡는다(터치는 손가락이 굵어 넓게). 0이면 그림 픽셀에 닿아야 한다.
+export function pickTrash(game: Aquarium, assets: SceneAssets, x: number, y: number, pad: number): number | null {
+  const items = game.litter.items;
+  for (let index = items.length - 1; index >= 0; index--) {
+    const item = items[index];
+    const sprite = trashSprite(item, assets, 0);
+    const dx = x - sprite.cx;
+    const dy = y - sprite.cy;
+    if (Math.abs(dx) > sprite.w * 0.5 + pad || Math.abs(dy) > sprite.h * 0.5 + pad) continue;
+    if (pad > 0) return item.id;
+    const pixels = pixelsOf(assets.trash[item.kind].texture);
+    if (!pixels) return item.id;
+    const [u0, , u1] = sprite.uv;
+    const tx = Math.floor((u0 + (u1 - u0) * (dx / sprite.w + 0.5)) * pixels.w);
+    const ty = Math.floor((dy / sprite.h + 0.5) * pixels.h);
+    for (let oy = -1; oy <= 1; oy++) {
+      for (let ox = -1; ox <= 1; ox++) {
+        if (solidAt(pixels, tx + ox, ty + oy)) return item.id;
+      }
+    }
+  }
+  return null;
+}
 
 /// 월드 좌표 (x, y)에 보이는 가까운 층 생물을 찾는다. 몸 픽셀(작은 생물은 둘레 2px까지)을 눌러야 잡힌다.
 export function pick(game: Aquarium, assets: SceneAssets, x: number, y: number): Actor | null {
@@ -52,9 +77,29 @@ export function displayName(game: Aquarium, actor: Actor): string {
   return `${rare}${game.species[actor.species].nameKo}${nickname}`;
 }
 
+/// 가리킨 쓰레기에도 생물처럼 연노랑 테두리와 이름을 띄운다.
+function appendTrashHover(frame: Frame, view: View, game: Aquarium, assets: SceneAssets): void {
+  const item = game.litter.items.find((entry) => entry.id === game.hoverTrash);
+  if (!item) return;
+  const pulse = 0.7 + 0.3 * Math.sin(game.time * 5);
+  const sprite = trashSprite(item, assets, 37, 1);
+  const outline = outlineOf(assets.trash[item.kind].texture, assets.trash[item.kind].w);
+  if (outline) frame.layers.push(textured("trash-outline", outline, "alpha", [{ ...sprite, color: rgba(255, 240, 150, 0.85 * pulse) }]));
+  const text = item.info.name;
+  const width = textWidth(text) + 8;
+  const half = view.viewport[0] / (2 * view.zoom);
+  const left = Math.min(Math.max(Math.ceil(view.camera.cx - half) + 4, roundHalfAway(sprite.cx - width * 0.5)), Math.floor(view.camera.cx + half) - 4 - width);
+  label(frame, view, [left, sprite.cy - sprite.h * 0.5 - 15, width, 12], text, 10, [255, 246, 196, 255], "center");
+}
+
 /// 가리킨 생물에 연노랑 테두리를 두르고 머리 위에 이름을 띄운다.
 export function appendHover(frame: Frame, view: View, game: Aquarium, assets: SceneAssets): void {
-  if (game.hover === null || !game.started || game.dex.open) return;
+  if (!game.started || game.dex.open) return;
+  if (game.hoverTrash !== null) {
+    appendTrashHover(frame, view, game, assets);
+    return;
+  }
+  if (game.hover === null) return;
   const actor = game.actors.find((entry) => entry.id === game.hover);
   if (!actor) return;
   const species = game.species[actor.species];

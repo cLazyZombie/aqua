@@ -7,7 +7,7 @@ import { type SceneAssets, loadScene, loadSceneAssets } from "./render/assets";
 import { clamStates } from "./render/backdrop";
 import { availableScenes, pickScene } from "./render/scenes";
 import { Renderer } from "./render/renderer";
-import { displayName, pick } from "./render/interact";
+import { displayName, pick, pickTrash } from "./render/interact";
 import { buildFrame, screenToWorld, visibleRange } from "./render/scene";
 import { Aquarium, Dex, type EventKind, SCREEN_HEIGHT, SCREEN_WIDTH, eventFromId, eventId, loadAll, setVisibleRange } from "./render/simapi";
 import { TextLayer } from "./render/text";
@@ -19,7 +19,7 @@ declare global {
     __aquaError?: string;
     __aquaEnter?: () => Promise<void>;
     __aquaSound?: Sound;
-    __aquaLive?: () => { started: boolean; dex: boolean; page: number; flashlight: boolean; food: number; ripples: number; hover: string | null; touch: boolean; pointer: [number, number] | null };
+    __aquaLive?: () => { started: boolean; dex: boolean; page: number; flashlight: boolean; food: number; ripples: number; hover: string | null; touch: boolean; pointer: [number, number] | null; trash: number; fishing: string };
   }
 }
 
@@ -59,7 +59,7 @@ class App {
 
   constructor(
     readonly game: Aquarium,
-    private readonly assets: SceneAssets,
+    readonly assets: SceneAssets,
   ) {}
 
   /// 바닥 조개들의 열림 단계(0 닫힘, 1 반쯤, 2 활짝)다.
@@ -94,11 +94,22 @@ class App {
     this.text.update(frame.texts);
   }
 
-  /// 포인터가 가리키는 생물을 찾아 `game.hover`에 적는다. 타이틀·도감 화면에서는 비운다.
+  /// 포인터가 가리키는 쓰레기·생물을 찾아 `game.hoverTrash`·`game.hover`에 적는다. 타이틀·도감 화면에서는 비운다.
+  /// 쓰레기 그림에 닿으면 쓰레기가 먼저, 다음이 생물, 그다음이 둘레를 넓힌 쓰레기(터치는 6px, 마우스는 2px)다.
   updateHover(): void {
     const game = this.game;
-    const target = game.pointer && game.started && !game.dex.open ? pick(game, this.assets, game.pointer[0], game.pointer[1]) : null;
-    game.hover = target ? target.id : null;
+    game.hover = null;
+    game.hoverTrash = null;
+    if (!game.pointer || !game.started || game.dex.open) return;
+    const [x, y] = game.pointer;
+    game.hoverTrash = pickTrash(game, this.assets, x, y, 0);
+    if (game.hoverTrash !== null) return;
+    const target = pick(game, this.assets, x, y);
+    if (target) {
+      game.hover = target.id;
+      return;
+    }
+    game.hoverTrash = pickTrash(game, this.assets, x, y, game.look.touch ? 6 : 2);
   }
 
   /// 월드 좌표의 생물(없으면 null)이다.
@@ -178,6 +189,25 @@ function touchMenu(stage: HTMLElement, items: [string, () => string, () => void]
   };
 }
 
+/// 낚시 버튼(아래쪽 가운데, 모든 기기): 낚싯대 모양 픽셀 아이콘이다. 낚시 중에는 켜진 모양이 된다.
+function fishingButton(stage: HTMLElement, toggle: () => void): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.id = "fish-button";
+  button.type = "button";
+  button.setAttribute("aria-label", "낚시");
+  // 12×12 픽셀 낚싯대·줄·바늘(색 칸을 사각형으로 그린 SVG).
+  const cells: [number, number, string][] = [
+    [1, 10, "#8b5a2b"], [2, 9, "#8b5a2b"], [3, 8, "#a0522d"], [4, 7, "#a0522d"], [5, 6, "#c68642"], [6, 5, "#c68642"], [7, 4, "#c68642"], [8, 3, "#d9a066"], [9, 2, "#d9a066"],
+    [10, 2, "#e6f6ff"], [10, 3, "#e6f6ff"], [10, 4, "#e6f6ff"], [10, 5, "#e6f6ff"], [10, 6, "#e6f6ff"], [10, 7, "#c0c8d0"], [9, 8, "#c0c8d0"], [10, 9, "#c0c8d0"], [11, 8, "#c0c8d0"],
+    [0, 11, "#5a3a1a"], [1, 11, "#5a3a1a"], [2, 10, "#6b4423"],
+  ];
+  button.innerHTML = `<svg viewBox="0 0 12 12" width="26" height="26" shape-rendering="crispEdges" aria-hidden="true">${cells.map(([x, y, color]) => `<rect x="${x}" y="${y}" width="1" height="1" fill="${color}"/>`).join("")}</svg>`;
+  button.addEventListener("click", toggle);
+  for (const kind of ["pointerdown", "pointerup", "mousedown", "contextmenu"]) button.addEventListener(kind, (event) => event.stopPropagation());
+  stage.append(button);
+  return button;
+}
+
 /// 창 모드: 약 60fps로 한 걸음씩 진행하고 그린다.
 function runLive(app: App): void {
   const game = app.game;
@@ -196,6 +226,8 @@ function runLive(app: App): void {
     hover: game.hover === null ? null : displayName(game, game.actors.find((actor) => actor.id === game.hover)!),
     touch: game.look.touch,
     pointer: game.pointer,
+    trash: game.litter.count(),
+    fishing: game.fishing.phase,
   });
   // 터치 화면이면 타이틀·도감 안내를 탭 조작으로 바꾸고 메뉴 버튼을 띄운다.
   game.look.touch = window.matchMedia("(pointer: coarse)").matches;
@@ -214,6 +246,12 @@ function runLive(app: App): void {
   const toggleFlashlight = () => {
     game.flashlight = !game.flashlight;
   };
+  const toggleFishing = () => {
+    if (!game.started) return;
+    game.dex.open = false;
+    game.fishing.toggle(game);
+  };
+  const rodButton = fishingButton(stage, toggleFishing);
   const nextScene = () => {
     // 배경 컨셉을 차례로 바꾸고 소품 배치도 새로 흩는다.
     const scenes = availableScenes();
@@ -238,8 +276,21 @@ function runLive(app: App): void {
     // 후처리가 월드 픽셀로 다시 모으므로 기기 픽셀 비율은 2까지만 쓴다(휴대폰 3배 화면에서 그리기 비용을 줄인다).
     app.syncSize(null, Math.min(2, window.devicePixelRatio || 1));
     const dt = (now - last) / 1000;
+    const fishing = game.fishing;
+    const [phaseBefore, biteBefore] = [fishing.phase, fishing.biteLeft];
     game.step(dt);
     sound.update(game, Math.min(dt, 0.25));
+    // 낚시: 찌가 떨어지면 풍덩, 진짜 입질이면 보글, 챘을 때와 낚았을 때 물보라 소리. 잡은 종은 도감에 남긴다.
+    if (phaseBefore === "fly" && fishing.phase === "sink") sound.feed(fishing.bobber);
+    if (biteBefore <= 0 && fishing.biteLeft > 0) sound.tap(fishing.bobber);
+    if (phaseBefore !== "fight" && fishing.phase === "fight") sound.feed(fishing.bobber);
+    if (fishing.landedSpecies) {
+      game.dex.catch(fishing.landedSpecies);
+      fishing.landedSpecies = null;
+      sound.tap(fishing.bobber);
+    }
+    rodButton.hidden = !game.started || game.dex.open;
+    rodButton.classList.toggle("on", fishing.active);
     last = now;
     app.updateHover();
     stage.style.cursor = game.hover !== null ? "pointer" : "";
@@ -251,6 +302,15 @@ function runLive(app: App): void {
   window.addEventListener("keydown", (event) => {
     if (event.repeat) return;
     const code = event.code;
+    if (code === "Space" && game.fishing.active) {
+      event.preventDefault();
+      game.fishing.press(game, game.pointer ? game.pointer[0] : game.fishing.aimX);
+      return;
+    }
+    if (code === "KeyG") {
+      toggleFishing();
+      return;
+    }
     if (code === "Tab" || code === "F11" || code.startsWith("Arrow")) event.preventDefault();
     if (code !== "KeyM") sound.unlock();
     if (code === "KeyM") {
@@ -281,11 +341,22 @@ function runLive(app: App): void {
     // Esc: 웹에서는 창을 닫지 않는다.
   });
 
+  window.addEventListener("keyup", (event) => {
+    if (event.code === "Space" && game.fishing.active) game.fishing.release();
+  });
+
   // 왼쪽(탭): 생물을 누르면 그 종이 좋아하는 먹이, 빈 곳이면 기본 가루 먹이.
   // 오른쪽(길게 누르기): 생물을 누르면 교감, 빈 곳이면 유리 두드리기(화면 일렁임).
   const act = (button: 0 | 2) => {
     if (!game.pointer) return;
     const [x, y] = game.pointer;
+    // 쓰레기를 누르면(왼쪽·탭) 치운다.
+    app.updateHover();
+    if (button === 0 && game.hoverTrash !== null) {
+      if (game.pickTrash(game.hoverTrash)) sound.feed(x);
+      game.hoverTrash = null;
+      return;
+    }
     const target = app.actorAt(x, y);
     if (button === 0) {
       if (target) game.feedActor(target);
@@ -302,6 +373,7 @@ function runLive(app: App): void {
   // 터치 한 번의 상태: 누른 자리, 길게 누르기 타이머, 길게 눌렀는지, 끌었는지.
   let press: { id: number; x: number; y: number; timer: number; long: boolean; moved: boolean } | null = null;
   let forget = 0;
+  let fishingPointer: number | null = null;
   const release = () => {
     if (press) window.clearTimeout(press.timer);
     press = null;
@@ -336,6 +408,13 @@ function runLive(app: App): void {
       else game.dex.open = false;
       return;
     }
+    if (game.fishing.active) {
+      // 낚시 중: 누르기·떼기를 낚시(겨누고 던지기, 멈추기, 채기, 감기)로 쓴다. 마우스는 왼쪽만.
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      fishingPointer = event.pointerId;
+      game.fishing.press(game, game.pointer[0]);
+      return;
+    }
     if (event.pointerType === "mouse") {
       if (event.button === 0) act(0);
       else if (event.button === 2) act(2);
@@ -359,6 +438,11 @@ function runLive(app: App): void {
     };
   });
   const lift = (event: PointerEvent, cancelled: boolean) => {
+    if (fishingPointer === event.pointerId) {
+      fishingPointer = null;
+      game.fishing.release();
+      return;
+    }
     if (!press || press.id !== event.pointerId) return;
     if (!cancelled && !press.long && !press.moved) act(0);
     release();
@@ -462,6 +546,30 @@ function report(game: Aquarium, image: string): unknown {
     catalog_count: game.species.filter((entry) => !entry.visitor).length,
     event: game.director.active ? eventId(game.director.active.kind) : null,
     banner: game.director.banner ? game.director.banner.text : null,
+    // 낚시 단계, 던지기 판정, 장력·남은 줄·체력, 걸린 종, 알림, 잡은 기록이다.
+    fishing: {
+      phase: game.fishing.phase,
+      quality: game.fishing.quality,
+      tension: game.fishing.tension,
+      distance: game.fishing.distance,
+      stamina: game.fishing.stamina,
+      bait: game.fishing.bait,
+      hooked: (() => {
+        const actor = game.fishing.hookedActor(game);
+        return actor ? game.species[actor.species].id : null;
+      })(),
+      note: game.fishing.note?.text ?? null,
+      result: game.fishing.result?.text ?? null,
+      catches: Object.fromEntries(game.fishing.catches),
+    },
+    // 바닥 쓰레기 수, 치운 수, 물 탁함(0..1), 가리킨 쓰레기 이름이다.
+    trash: {
+      count: game.litter.count(),
+      landed: game.litter.items.filter((item) => item.landed).length,
+      cleaned: game.litter.cleaned,
+      gloom: game.litter.gloom,
+      hover: game.litter.items.find((item) => item.id === game.hoverTrash)?.info.name ?? null,
+    },
     // 지금 사건의 출연진(화면에 남아 있는 개체만)과 무대 장치 상태다.
     cast: (game.director.active?.cast ?? []).flatMap((id) => {
       const actor = game.actors.find((entry) => entry.id === id);
@@ -489,7 +597,10 @@ async function runCapture(app: App): Promise<void> {
   const game = app.game;
   const seconds = numberParam("seconds", 0);
   const size = pairParam("size", "x") ?? [SCREEN_WIDTH, SCREEN_HEIGHT];
-  type Moment = "feed" | "tap" | "cast" | "react" | "treat" | EventKind;
+  type Moment = "feed" | "tap" | "cast" | "react" | "treat" | "clean" | "fishOn" | "fishPress" | "fishRelease" | "fishHook" | EventKind;
+  // 쓰레기 확인용: trash=n이면 바닥에 n개를 미리 쌓고, cleanAt에 포인터 자리 쓰레기를 치운다.
+  const trash = numberParam("trash", 0);
+  if (trash > 0) game.litter.seed(trash);
   const moments: [number, Moment][] = [];
   const at = (name: string, moment: Moment) => {
     const value = params.get(name);
@@ -501,6 +612,13 @@ async function runCapture(app: App): Promise<void> {
   at("castAt", "cast");
   at("reactAt", "react");
   at("treatAt", "treat");
+  at("cleanAt", "clean");
+  // 낚시 확인용: fishingAt에 낚시 모드를 켜고, fishPressAt·fishReleaseAt에 포인터 자리에서 누르고 떼고,
+  // fishHookAt에 부른 생물(없으면 포인터 자리 생물)을 바로 걸어 싸움을 시작한다.
+  at("fishingAt", "fishOn");
+  at("fishPressAt", "fishPress");
+  at("fishReleaseAt", "fishRelease");
+  at("fishHookAt", "fishHook");
   const eventParam = params.get("event");
   if (eventParam) {
     const kind = eventFromId(eventParam);
@@ -527,6 +645,28 @@ async function runCapture(app: App): Promise<void> {
     } else if (moment === "treat") {
       const actor = target();
       if (actor) game.feedActor(actor);
+    } else if (moment === "fishOn") {
+      if (!game.fishing.active) game.fishing.toggle(game);
+    } else if (moment === "fishPress") {
+      game.fishing.press(game, game.pointer ? game.pointer[0] : game.fishing.aimX);
+    } else if (moment === "fishRelease") {
+      game.fishing.release();
+    } else if (moment === "fishHook") {
+      const actor = target();
+      const fishing = game.fishing;
+      if (actor) {
+        if (!fishing.active) fishing.toggle(game);
+        fishing.phase = "wait";
+        fishing.bobber = actor.x;
+        fishing.bait = [actor.x, actor.y];
+        fishing.suitor = actor.id;
+        fishing.biteLeft = 0.5;
+        fishing.press(game, actor.x);
+        fishing.release();
+      }
+    } else if (moment === "clean") {
+      const id = game.pointer ? pickTrash(game, app.assets, game.pointer[0], game.pointer[1], 6) : null;
+      if (id !== null) game.pickTrash(id);
     } else {
       game.triggerEvent(moment);
     }

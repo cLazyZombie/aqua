@@ -37,6 +37,8 @@ import { dream, type Mood, moodStill, react, stepMood } from "./mood";
 import { clamp, f32, fract, hash01, minBy, pickIndex, retain, round, signum, toUsize } from "./num";
 import { mixSeed, Rng } from "./rng";
 import { School, steer, type Threat } from "./school";
+import { Fishing } from "./fishing";
+import { Litter } from "./trash";
 import { SetPiece } from "./vignettes";
 import { awakeAt, dreamer, type FoodKind, FOOD_KINDS, hourOf, hoursSinceStart, type Reaction, type Traits, traitTable, type Variant } from "./traits";
 
@@ -231,6 +233,8 @@ export class Aquarium {
   pointer: [number, number] | null = null;
   /** 마우스가 올라가 있는 생물 id다. 그 생물은 천천히 헤엄쳐 누르기 쉽게 한다. */
   hover: number | null = null;
+  /** 포인터가 가리키는 쓰레기 id다(생물보다 먼저 잡힌다). */
+  hoverTrash: number | null = null;
   /** 종마다 활동 시간·먹이·교감 규칙이다(종 번호로 찾는다). */
   traits: Traits[];
   /** 포인터가 스쳐 터뜨린 기포 줄기 알(키)과 그 알이 다시 나타나는 시각이다. */
@@ -239,6 +243,10 @@ export class Aquarium {
   scene = "reef";
   /** 사건이 잠깐 무대에 올리는 것들(빛기둥·해초 장난감·오리 등)이다. 그리는 쪽이 읽는다. */
   setpiece = new SetPiece();
+  /** 바닥에 쌓이는 쓰레기(전용 난수)다. */
+  litter: Litter;
+  /** 낚시 모드(전용 난수)다. */
+  fishing: Fishing;
   time = 0;
   started: boolean;
   schools: School[] = [];
@@ -254,6 +262,8 @@ export class Aquarium {
     this.traits = traitTable(species);
     this.started = started;
     this.rng = new Rng(mixSeed(seed));
+    this.litter = new Litter(seed);
+    this.fishing = new Fishing(seed);
     // 처음 모습도 시드마다 다르다: 지금 시각에 활동하는 종에서 여덟 마리와 무리 하나를 고른다.
     for (const index of this.startingLineup()) {
       this.spawn(index, true);
@@ -398,6 +408,11 @@ export class Aquarium {
   /** 생물과 교감한다(오른쪽 클릭). 시작한 반응을 돌려준다. */
   react(actor: Actor): Reaction | null {
     return react(this, actor);
+  }
+
+  /** 쓰레기를 치운다(클릭·탭). 치웠으면 true다. */
+  pickTrash(id: number): boolean {
+    return this.litter.pick(id, this.particles) !== null;
   }
 
   /** 유리를 두드린다. 화면이 그 자리에서 둥글게 일렁이고 근처 생물이 놀라 흩어진다. */
@@ -854,6 +869,8 @@ export class Aquarium {
       }
     }
     this.popBubbles(spawned);
+    this.litter.step(time, dt, this.started, spawned);
+    if (this.fishing.active) this.fishing.step(this, dt, spawned);
     this.particles.push(...spawned);
     stepParticles(this.particles, dt, time, current);
     const species = this.species;
@@ -1094,6 +1111,10 @@ export class Aquarium {
 
   spawnRandom(): void {
     if (this.units() >= MAX_UNITS) {
+      return;
+    }
+    // 쓰레기가 10개를 넘으면 쌓인 만큼 덜 오고, 30개면 새 생물이 오지 않는다.
+    if (!this.litter.allowsSpawn()) {
       return;
     }
     const night = this.daylight() < 0.4;

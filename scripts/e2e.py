@@ -190,6 +190,36 @@ def check_vignettes() -> None:
     assert int(((patch[:, 0] > 200) & (patch[:, 1] > 100) & (patch[:, 1] < 190) & (patch[:, 2] < 140)).sum()) > 60, "clownfish eggs hidden"
 
 
+def check_trash_and_fishing() -> None:
+    """쓰레기: 12개면 물이 탁해지고(초록이 파랑보다 도드라짐), 30개면 가장 탁하고, 누르면 하나 치운다.
+    낚시: 겨누기, 힘 게이지, 완벽하게 던지면 겨눈 곳 가까이 떨어지고, 걸린 참다랑어를 감으면 장력이 오른다."""
+    clean, clean_report = load("trash-none")
+    dirty, dirty_report = load("trash-dirty")
+    _, dead_report = load("trash-dead")
+    assert clean_report["trash"]["gloom"] < 0.05
+    assert dirty_report["trash"]["landed"] >= 12 and dirty_report["trash"]["gloom"] > 0.25, dirty_report["trash"]
+    assert dead_report["trash"]["count"] >= 30 and dead_report["trash"]["gloom"] > 0.95, dead_report["trash"]
+    water = lambda image: np.asarray(image).astype(float)[120:380, 200:760].reshape(-1, 3).mean(0)
+    c, d = water(clean), water(dirty)
+    assert d[1] - d[2] > c[1] - c[2] + 4, f"dirty water should turn green-brown ({c} -> {d})"
+    _, hover = load("trash-hover")
+    _, picked = load("trash-pick")
+    assert hover["trash"]["hover"] == "비닐봉지", hover["trash"]
+    assert picked["trash"]["cleaned"] == 1 and picked["trash"]["count"] == hover["trash"]["count"] - 1, picked["trash"]
+    _, aim = load("fishing-aim")
+    assert aim["fishing"]["phase"] == "aim"
+    charge, charge_report = load("fishing-charge")
+    assert charge_report["fishing"]["phase"] == "charge"
+    gauge = np.asarray(charge).astype(int)[412:440, 360:600].reshape(-1, 3)
+    assert int(((gauge[:, 1] > 200) & (gauge[:, 0] < 150)).sum()) > 8, "power meter should show the green perfect zone"
+    _, wait = load("fishing-wait")
+    assert wait["fishing"]["quality"] == "perfect" and abs(wait["fishing"]["bait"][0] - 300) <= 4, wait["fishing"]
+    assert wait["fishing"]["phase"] in ("sink", "wait")
+    _, fight = load("fishing-fight")
+    assert fight["fishing"]["phase"] == "fight" and fight["fishing"]["hooked"] == "bluefin-tuna", fight["fishing"]
+    assert fight["fishing"]["tension"] > 0.3
+
+
 def main() -> None:
     subprocess.run(["node", "scripts/capture.mjs"], cwd=ROOT, check=True)
     title, title_report = load("title")
@@ -294,11 +324,12 @@ def main() -> None:
     check_ambient()
     check_scenes()
     check_vignettes()
+    check_trash_and_fishing()
     print("E2E PASS: title, day motion, whale dusk, night glow, dawn, storm flash, feeding; "
           "hover outline+name, reactions (crab claws, puffer, pearl, dolphin leap, school heart), treat hearts, night rings; "
           "soft glow for every glowing species (normal + flare) and night event; "
           "ambient: silver glints, surface reflection, moon, floor glow, variants, regulars, dream, bubble pop, prints; "
-          "scenes: 5 concepts day/night, random layout, clams; vignettes: 31 events (stage, cast, aurora, fireworks, eggs); "
+          "scenes: 5 concepts day/night, random layout, clams; vignettes: 31 events (stage, cast, aurora, fireworks, eggs); trash (murk, pick, hover); fishing (aim, meter, perfect cast, fight); "
           "all lit species, boids school, facing, pixel grid; resize cover; "
           "events: chest, shark patrol (no eating), tap ripple, treat basket, diver, dex")
 

@@ -96,6 +96,18 @@ export const SCENARIOS = [
   { name: "ambient-regular", seconds: 20.5, started: true, pointer: "240,125", cast: "whale-shark", castAt: 20, individual: 0 },
   { name: "ambient-dream", seconds: 186, started: true, pointer: "240,200", cast: "octopus", castAt: 178, hover: false },
   { name: "ambient-pop", seconds: 30, started: true, pointer: "62,150" },
+  // 쓰레기: 12개 쌓이면 물이 탁해지고, 30개면 수초가 사라진다. 포인터 자리 쓰레기를 치우면 하나 줄어든다.
+  { name: "trash-none", seconds: 30, started: true, scene: "kelp" },
+  { name: "trash-dirty", seconds: 30, started: true, scene: "kelp", trash: 12 },
+  { name: "trash-dead", seconds: 30, started: true, scene: "kelp", trash: 30 },
+  { name: "trash-pick", seconds: 30.2, started: true, scene: "kelp", trash: 12, pointer: "117,250", cleanAt: 30, hover: false },
+  { name: "trash-hover", seconds: 30, started: true, scene: "kelp", trash: 12, pointer: "117,250" },
+  // 낚시: 겨누기, 힘 게이지, 완벽하게 던진 뒤 기다리기, 참다랑어를 걸어 감는 싸움(장력 게이지), 풀어 주기.
+  { name: "fishing-aim", seconds: 20.6, started: true, pointer: "300,120", fishingAt: 20, hover: false },
+  { name: "fishing-charge", seconds: 20.95, started: true, pointer: "300,120", fishingAt: 20, fishPressAt: 20.3, hover: false },
+  { name: "fishing-wait", seconds: 26, started: true, pointer: "300,120", fishingAt: 20, fishPressAt: 20.3, fishReleaseAt: 20.82, hover: false },
+  { name: "fishing-fight", seconds: 21.6, started: true, pointer: "300,150", cast: "bluefin-tuna", castAt: 20, fishHookAt: 20.2, fishPressAt: 20.6, hover: false },
+  { name: "fishing-fight-slack", seconds: 22.4, started: true, pointer: "300,150", cast: "clownfish", castAt: 20, fishHookAt: 20.2, hover: false },
   // 먼 층 생물은 불투명하다: 켈프 숲 앞 먼 층에 상어를 불러 뒤 배경이 몸을 뚫고 보이지 않는지 본다.
   { name: "far-shark", seconds: 20.2, started: true, pointer: "120,120", cast: "leopard-shark", castAt: 20, depth: 0, scene: "kelp", hover: false },
   ...GLOW_SCENARIOS,
@@ -122,7 +134,7 @@ export function webQuery(scenario, seed = 7) {
   if (scenario.flashlight) q.set("flashlight", "1");
   if (scenario.dex) q.set("dex", "1");
   if (scenario.hover === false) q.set("hover", "0");
-  for (const key of ["cast", "castAt", "reactAt", "treatAt", "variant", "individual", "scene", "layout", "depth"]) {
+  for (const key of ["cast", "castAt", "reactAt", "treatAt", "variant", "individual", "scene", "layout", "depth", "trash", "cleanAt", "fishingAt", "fishPressAt", "fishReleaseAt", "fishHookAt"]) {
     if (scenario[key] !== undefined) q.set(key, String(scenario[key]));
   }
   return q.toString();

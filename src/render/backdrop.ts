@@ -83,11 +83,28 @@ function appendSun(frame: Frame, game: Aquarium, far: [number, number]): void {
 function appendProps(frame: Frame, game: Aquarium, assets: SceneAssets, front: boolean): void {
   const batches: Sprite[][] = assets.props.map(() => []);
   const style = assets.scene.style;
+  // 쓰레기가 10개를 넘으면 수초(흔들리는 해초·켈프·말미잘)가 하나씩 시들어 사라지고(30개면 모두), 산호는 하얗게 바랜다.
+  const death = Math.min(1, Math.max(0, (game.litter.gloom - 0.3) / 0.7));
   for (const { prop: index, x, row, flip, phase } of assets.scene.layout) {
     if (row !== (front ? "front" : "back")) continue;
     const prop = assets.props[index];
     if (!prop) continue;
-    const [bottom, color, order] = front ? [HEIGHT + 3, WHITE, 10] : [FLOOR_Y + 1, style.backProps, -60];
+    const base = front ? WHITE : style.backProps;
+    let [bottom, color, order] = front ? [HEIGHT + 3, base, 10] : [FLOOR_Y + 1, base, -60];
+    if (death > 0) {
+      if (prop.frames === 8) {
+        // 개체마다 시드는 차례가 다르다. 시들수록 갈색으로 변하며 옅어지고 조금 가라앉는다.
+        const turn = hash(x * 0.37 + phase * 13) * 0.85;
+        const wilt = Math.min(1, Math.max(0, (death - turn) / 0.15));
+        if (wilt >= 1) continue;
+        const tone = mix([base[0], base[1], base[2]], [150, 118, 70], wilt);
+        color = rgba(tone[0], tone[1], tone[2], (base[3] / 255) * (1 - wilt * wilt));
+        bottom += Math.round(wilt * 6);
+      } else if (prop.kind !== "clam") {
+        const tone = mix([base[0], base[1], base[2]], [200, 198, 188], death * 0.6);
+        color = rgba(tone[0], tone[1], tone[2], base[3] / 255);
+      }
+    }
     let propFrame = Math.trunc(Math.floor(game.time * 4.5 + x * 0.071 + phase * 8)) % prop.frames;
     // 강한 해류에는 해초가 흐름 쪽으로 가장 많이 굽은 프레임 근처에 머문다.
     if (prop.frames === 8 && Math.abs(game.current) > 6) {
@@ -258,7 +275,9 @@ export function appendRays(frame: Frame, game: Aquarium, assets: SceneAssets): v
     const breathe = 0.5 + 0.5 * Math.sin(game.time * 0.37 + seed * 2.3);
     // 구름 그림자가 지나가는 자리의 빛줄기는 옅어진다.
     const shade = 1 - 0.45 * cloudCover(game, x + 28);
-    const strength = day * shade * (0.16 + 0.22 * breathe) + moon * 0.07 * breathe + game.twilight() * 0.08 + flash * 0.35 + game.golden * (0.25 + 0.15 * breathe);
+    // 탁한 물에서는 빛줄기가 흐려진다.
+    const murk = 1 - 0.6 * game.litter.gloom;
+    const strength = murk * (day * shade * (0.16 + 0.22 * breathe) + moon * 0.07 * breathe + game.twilight() * 0.08 + flash * 0.35 + game.golden * (0.25 + 0.15 * breathe));
     let warm = mix([255, 250, 215], [255, 168, 96], game.twilight());
     warm = mix(warm, [255, 205, 90], game.golden);
     const tint = mix(warm, [150, 190, 255], moon);
