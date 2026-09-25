@@ -4,7 +4,7 @@ import type { SceneAssets, Sheet } from "./assets";
 import type { Frame, Rgba, Sprite } from "./draw";
 import { WHITE, cellUv, fullUv, hash, mix, pixelRect, pixelSprite, remEuclid, rgb, rgba, roundHalfAway, solids, textured } from "./draw";
 import type { View } from "./scene";
-import { type Aquarium, HEIGHT, WIDTH } from "./simapi";
+import { type Aquarium, HEIGHT, VIEW_LEFT, VIEW_WIDTH, WIDTH } from "./simapi";
 
 /// 먼 층 실루엣 패럴랙스 계수다.
 const FAR_THING = 0.35;
@@ -65,11 +65,11 @@ export function appendCurrent(frame: Frame, game: Aquarium): void {
   const strength = Math.abs(game.current) / 26;
   if (strength < 0.02) return;
   const lines: Sprite[] = [];
-  for (let index = 0; index < 26; index++) {
+  for (let index = 0; index < 32; index++) {
     const seed = index * 5.1;
     const length = 10 + hash(seed) * 26;
     const speed = game.current * (2.5 + hash(seed + 1) * 2);
-    const x = remEuclid(hash(seed + 2) * (WIDTH + 60) + game.time * speed, WIDTH + 60) - 30;
+    const x = remEuclid(hash(seed + 2) * (VIEW_WIDTH + 60) + game.time * speed, VIEW_WIDTH + 60) + VIEW_LEFT - 30;
     const y = 40 + hash(seed + 3) * 190;
     lines.push(pixelRect(x, y, length, 1, fullUv(), rgba(210, 245, 255, 0.28 * strength), 13));
   }
@@ -142,9 +142,9 @@ export function appendLights(frame: Frame, game: Aquarium, assets: SceneAssets):
   const glow: Sprite[] = [];
   if (game.glowWave !== null) {
     // 수면 아래를 따라 한쪽에서 반대쪽으로 번지는 청록 빛 물결.
-    const head = game.glowWave * (WIDTH + 200) - 100;
-    for (let column = 0; column < WIDTH / 2; column++) {
-      const x = column * 2;
+    const head = VIEW_LEFT + game.glowWave * (VIEW_WIDTH + 200) - 100;
+    for (let column = 0; column < VIEW_WIDTH / 2; column++) {
+      const x = VIEW_LEFT + column * 2;
       const distance = Math.abs(x - head);
       if (distance > 90) continue;
       const strength = Math.pow(1 - distance / 90, 1.5) * (0.4 + 0.6 * night);

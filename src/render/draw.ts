@@ -27,6 +27,8 @@ export type Material =
   | { kind: "solid" }
   | { kind: "texture"; texture: THREE.Texture }
   | { kind: "silhouette"; texture: THREE.Texture }
+  /** 물속 일렁임으로 밀어 읽는 배경 층(amplitude는 흔들림 폭, 텍셀)이다. */
+  | { kind: "wavy"; texture: THREE.Texture; amplitude: number }
   | { kind: "lit"; texture: THREE.Texture; normal: THREE.Texture; variant?: number };
 
 export interface Layer {

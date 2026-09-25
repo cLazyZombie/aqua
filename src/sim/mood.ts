@@ -2,7 +2,7 @@
 // 반응은 생물을 없애거나 해치지 않는다. 움직임을 바꾸는 반응은 사건이 조종 중인 생물에게는 쓰지 않는다.
 
 import type { Actor, Aquarium } from "./aquarium";
-import { faceTravel, grounded, type Species } from "./catalog";
+import { faceTravel, glowPoint, grounded, type Species } from "./catalog";
 import { FLOOR_Y, SWIM_TOP, TAU, WIDTH } from "./constants";
 import type { Script } from "./director";
 import { Particle } from "./life";
@@ -173,9 +173,12 @@ function opening(game: Aquarium, actor: Actor, species: Species, kind: Reaction)
     case "nod":
       actor.targetY = Math.max(SWIM_TOP + species.frameH * 0.5, actor.targetY - 10);
       break;
-    case "glow":
-      out.push(new Particle("Ring", actor.x, actor.y, 0, 0, 0.9, 0));
+    case "glow": {
+      // 빛 고리는 몸 가운데가 아니라 빛나는 곳(루어·발광 기관)에서 퍼진다.
+      const [lx, ly] = glowPoint(species, actor.x, actor.y, actor.facing);
+      out.push(new Particle("Ring", lx, ly, 0, 0, 0.9, 0));
       break;
+    }
     case "song":
       out.push(new Particle("Ring", actor.x, actor.y, 0, 0, 3, 0));
       break;
@@ -348,13 +351,18 @@ export function stepMood(game: Aquarium, actor: Actor, species: Species, dt: num
       }
       if (at(1.4)) spawned.push(heart(actor, species, 0.5));
       break;
-    case "glow":
+    case "glow": {
+      // 반짝임은 빛나는 곳 둘레를 돌고, 고리도 그곳에서 퍼진다. 몸 전체가 빛나는 해파리는 몸 둘레를 돈다.
+      const [lx, ly] = glowPoint(species, actor.x, actor.y, actor.facing);
       if (every(0.18)) {
         const angle = age * 9;
-        spawned.push(new Particle("Spark", actor.x + Math.cos(angle) * species.frameW * 0.5, actor.y + Math.sin(angle) * species.frameH * 0.5, 0, -8, 0.9, 0));
+        const rx = Math.min(species.frameW * 0.5, species.glowRadius + 4);
+        const ry = Math.min(species.frameH * 0.5, species.glowRadius + 4);
+        spawned.push(new Particle("Spark", lx + Math.cos(angle) * rx, ly + Math.sin(angle) * ry, 0, -8, 0.9, 0));
       }
-      if (at(1.2) || at(2.4)) spawned.push(new Particle("Ring", actor.x, actor.y, 0, 0, 0.9, 0));
+      if (at(1.2) || at(2.4)) spawned.push(new Particle("Ring", lx, ly, 0, 0, 0.9, 0));
       break;
+    }
     case "prism":
     case "fan":
     case "spin":
@@ -777,10 +785,14 @@ export function moodLook(actor: Actor, species: Species, time: number): Look {
       anchorBottom();
       break;
     }
+    case "leap":
+      // 날치는 물속에서 접었던 가슴지느러미를 수면을 뚫을 즈음 날개처럼 펴고(자세 그림), 수면을 찍은 뒤 돌아가는 동안 편 채 활공한다.
+      // 자세 그림이 없는 종(돌고래·연어)은 그대로다.
+      look.alt = (state.fired & 2) !== 0 || actor.y < 58;
+      break;
     case "photo":
     case "roll":
     case "loop":
-    case "leap":
       break;
   }
   return look;

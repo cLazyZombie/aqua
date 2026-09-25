@@ -2,7 +2,7 @@
 // 소용돌이(베이트볼)와 포식자 회피를 더한다.
 
 import type { Actor } from "./aquarium";
-import { WIDTH } from "./constants";
+import { visible } from "./constants";
 import { clamp, f32 } from "./num";
 
 /** 무리 전체가 따라가는 목표점이다. 화면을 가로지르다 가장자리에서 돌아서고, 수명이 다하면 떠난다. */
@@ -45,7 +45,7 @@ export class School {
     this.age = f32(this.age + dt);
     this.x += this.heading * 15 * dt;
     this.y = 120 + this.lift + Math.sin(time * 0.23 + this.phase) * 45 + Math.sin(time * 0.61 + this.phase) * 12;
-    if (!this.leaving() && ((this.x > WIDTH - 60 && this.heading > 0) || (this.x < 60 && this.heading < 0))) {
+    if (!this.leaving() && ((this.x > visible.right - 60 && this.heading > 0) || (this.x < visible.left + 60 && this.heading < 0))) {
       this.heading = -this.heading;
     }
   }

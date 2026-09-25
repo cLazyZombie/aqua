@@ -1,5 +1,6 @@
 // 렌더러와 앱이 쓰는 시뮬레이션 표면을 한곳에서 다시 내보낸다(docs/sim-contract.md).
 export { Aquarium, Actor, WIDTH, HEIGHT, FLOOR_Y, SCREEN_WIDTH, SCREEN_HEIGHT } from "../sim/aquarium";
+export { MARGIN, VIEW_LEFT, VIEW_RIGHT, VIEW_WIDTH, setVisibleRange } from "../sim/constants";
 export { faceTravel, grounded, loadAll } from "../sim/catalog";
 export { moodLook, type Look } from "../sim/mood";
 export { FOOD_NAMES, type FoodKind, INDIVIDUAL_NAMES, type Reaction, silver, VARIANT_NAMES } from "../sim/traits";

@@ -27,7 +27,10 @@ export interface Species {
   normal: string;
   glow: boolean;
   glowTexture: string | null;
+  /** 빛이 나오는 곳(루어·발광 기관, 프레임 가운데 기준, 오른쪽을 볼 때)이다. */
   glowCenter: [number, number] | null;
+  /** 광원 덩어리의 반지름(픽셀)이다. 교감 반짝임이 그 둘레를 돈다. */
+  glowRadius: number;
   /** 상황에 따라 바꿔 그리는 다른 모습(부푼 복어)이다. */
   alt: AltSheet | null;
   /** 사건 때만 등장하는 방문자(고래상어·잠수부 등)다. 평소 등장 순환에서 뺀다. */
@@ -57,6 +60,7 @@ interface RawSpecies {
   glow: boolean;
   glow_texture?: string | null;
   glow_center?: [number, number] | null;
+  glow_radius?: number;
   alt?: RawAlt | null;
   visitor?: boolean;
   group?: string;
@@ -77,6 +81,7 @@ function convert(raw: RawSpecies): Species {
     glow: raw.glow,
     glowTexture: raw.glow_texture ?? null,
     glowCenter: raw.glow_center ? [raw.glow_center[0], raw.glow_center[1]] : null,
+    glowRadius: raw.glow_radius ?? raw.frame_w * 0.5,
     alt: raw.alt
       ? {
           texture: raw.alt.texture ?? "",
@@ -93,6 +98,12 @@ function convert(raw: RawSpecies): Species {
 /** 좌우로 헤엄치며 진행 방향을 바라보는 종인지 알려 준다. */
 export function faceTravel(species: Species): boolean {
   return !["jelly", "octopus", "crawl", "sessile"].includes(species.motion);
+}
+
+/** 빛이 나오는 곳(루어·발광 기관)의 월드 좌표다. 발광이 없으면 몸 가운데다. */
+export function glowPoint(species: Species, x: number, y: number, facing: number): [number, number] {
+  const [gx, gy] = species.glowCenter ?? [0, 0];
+  return [x + gx * (faceTravel(species) ? facing : 1), y + gy];
 }
 
 /** `faceTravel`의 별칭이다. */

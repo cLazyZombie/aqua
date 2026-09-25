@@ -344,6 +344,38 @@ def save_lit_sheet(name: str, frames: list[np.ndarray]) -> tuple[str, str]:
     return texture, normal
 
 
+def glow_source(lit: np.ndarray, fw: int, fh: int) -> tuple[list[float], float]:
+    """빛이 나오는 곳(프레임 가운데 기준 좌표)과 그 반지름이다.
+
+    초롱아귀처럼 한 덩어리(루어)가 발광 픽셀의 35% 이상이고 3픽셀 이상이면 그 덩어리를 광원으로 본다.
+    눈·이빨의 흰 하이라이트까지 평균하면 광원이 몸 가운데로 끌려오기 때문이다.
+    발광점이 몸 곳곳에 흩어진 종(반딧불오징어·독사고기)은 모든 발광 픽셀의 평균을 쓴다.
+    """
+    h, w = lit.shape
+    seen = np.zeros_like(lit, dtype=bool)
+    blobs: list[list[tuple[int, int]]] = []
+    for y0, x0 in zip(*np.nonzero(lit)):
+        if seen[y0, x0]:
+            continue
+        seen[y0, x0] = True
+        stack, blob = [(y0, x0)], []
+        while stack:
+            y, x = stack.pop()
+            blob.append((y, x))
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < h and 0 <= nx < w and lit[ny, nx] and not seen[ny, nx]:
+                        seen[ny, nx] = True
+                        stack.append((ny, nx))
+        blobs.append(blob)
+    biggest = max(blobs, key=len)
+    points = np.array(biggest if len(biggest) >= 3 and len(biggest) >= 0.35 * lit.sum() else [p for blob in blobs for p in blob])
+    ys, xs = points[:, 0], points[:, 1]
+    radius = max(1.0, (max(xs.max() - xs.min(), ys.max() - ys.min()) + 1) / 2)
+    return [float(xs.mean()) - fw / 2, float(ys.mean()) - fh / 2], float(radius)
+
+
 def build(entry: tuple, group: str, visitor: bool = False) -> dict:
     sid, name_en, name_ko, width, motion, activity, glow, flip = entry
     frames, fw, fh = bake_sheet(sid, sid, width, motion, flip or sid in FLIP)
@@ -362,8 +394,7 @@ def build(entry: tuple, group: str, visitor: bool = False) -> dict:
         Image.fromarray(glow_sheet, "RGBA").save(OUT / f"{sid}-glow.png")
         record["glow"] = True
         record["glow_texture"] = f"assets/species/{sid}-glow.png"
-        gy, gx = np.nonzero(lit)
-        record["glow_center"] = [float(gx.mean()) - fw / 2, float(gy.mean()) - fh / 2]
+        record["glow_center"], record["glow_radius"] = glow_source(lit, fw, fh)
     if sid == "pufferfish":
         # 포식자가 다가오거나 교감하면 바꿔 그리는 부푼 모습. 같은 프레임 수와 노멀 시트를 쓴다.
         puffed, pw, ph = bake_sheet("pufferfish-puffed", "pufferfish-puffed", round(width * 1.3), motion)

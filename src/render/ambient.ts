@@ -8,7 +8,7 @@ import type { Frame, Rgba, Sprite } from "./draw";
 import { WHITE, fullUv, hash, pixelRect, pixelSprite, remEuclid, rgb, rgba, roundHalfAway, solids } from "./draw";
 import { glowColorOf, pixelsOf, solidAt } from "./pixels";
 import type { View } from "./scene";
-import { type Actor, type Aquarium, FLOOR_Y, WIDTH, faceTravel, silver } from "./simapi";
+import { type Actor, type Aquarium, FLOOR_Y, VIEW_LEFT, VIEW_WIDTH, WIDTH, faceTravel, silver } from "./simapi";
 
 const TAU = Math.PI * 2;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -285,11 +285,11 @@ export function appendMarineSnow(frame: Frame, game: Aquarium): void {
   const lit: Sprite[] = [];
   const night = game.nightStrength();
   const torch = game.flashlight && night > 0.2 ? game.pointer : null;
-  for (let index = 0; index < 36; index++) {
+  for (let index = 0; index < 44; index++) {
     const seed = index * 3.7 + 900;
     const speed = 1.5 + hash(seed) * 2.5;
     const y = 110 + remEuclid(hash(seed + 1) * 140 + game.time * speed, 140);
-    const x = hash(seed + 2) * WIDTH + Math.sin(game.time * 0.3 + seed) * 3;
+    const x = VIEW_LEFT + hash(seed + 2) * VIEW_WIDTH + Math.sin(game.time * 0.3 + seed) * 3;
     faint.push(pixelSprite(x, y, 1, 1, fullUv(), rgba(200, 212, 222, 0.12 + 0.08 * hash(seed + 3)), 29));
     if (torch) {
       const distance = Math.hypot(x - torch[0], y - torch[1]);

@@ -1,6 +1,6 @@
 // 생물 주변의 작은 생명감: 흐름장 플랑크톤, 먹이, 모래 먼지, 발광 궤적, 해파리 촉수.
 
-import { FLOOR_Y, HEIGHT, TAU, WIDTH } from "./constants";
+import { FLOOR_Y, HEIGHT, TAU, visible } from "./constants";
 import { remEuclid, retain } from "./num";
 
 /**
@@ -157,7 +157,7 @@ export function stepParticles(particles: Particle[], dt: number, time: number, c
     switch (particle.kind) {
       case "Plankton": {
         const [u, v] = flow(particle.x, particle.y, time);
-        particle.x = remEuclid(particle.x + (u + current) * dt, WIDTH + 20) - 10;
+        particle.x = remEuclid(particle.x + (u + current) * dt - visible.left + 10, visible.right - visible.left + 20) + visible.left - 10;
         particle.y = remEuclid(particle.y + (v + 1.2) * dt - 24, HEIGHT - 30) + 24;
         particle.age %= particle.life;
         break;

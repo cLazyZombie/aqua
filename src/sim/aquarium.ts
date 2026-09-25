@@ -14,6 +14,8 @@ import {
   TAU,
   TURN_SECONDS,
   WIDTH,
+  offstage,
+  visible,
 } from "./constants";
 import { Dex, type DexEntry, dexEntries, observe } from "./dex";
 import {
@@ -186,6 +188,8 @@ export interface Look {
   crt: boolean;
   /** 창 크기와 관계없이 정수배로만 확대한다. */
   integer: boolean;
+  /** 터치 화면이다(타이틀·도감 안내를 탭 조작으로 쓴다). */
+  touch: boolean;
 }
 
 /** 먹을 수 있는 먹이 입자: 입자 칸, x, y, 종류, 받은 생물 id. */
@@ -196,7 +200,7 @@ type Body = [number, number, number, number | null, number, number];
 type Position = [number, number, number, number];
 
 export class Aquarium {
-  look: Look = { palette: false, crt: false, integer: false };
+  look: Look = { palette: false, crt: false, integer: false, touch: false };
   species: Species[];
   actors: Actor[] = [];
   particles: Particle[] = [];
@@ -259,7 +263,7 @@ export class Aquarium {
       this.spawnSchool(school, true);
     }
     for (let index = 0; index < PLANKTON; index += 1) {
-      const x = this.random() * WIDTH;
+      const x = visible.left + this.random() * (visible.right - visible.left);
       const y = 24 + this.random() * (HEIGHT - 30);
       const life = 3 + this.random() * 5;
       const speck = new Particle("Plankton", x, y, 0, 0, life, index * 0.37);
@@ -768,8 +772,9 @@ export class Aquarium {
         }
       }
       const margin = species.frameW * 0.5 + 6;
-      const towardEdge = (actor.facing > 0 && actor.x > WIDTH - margin) || (actor.facing < 0 && actor.x < margin);
-      const inside = actor.x > margin * 0.5 && actor.x < WIDTH - margin * 0.5;
+      // 가장자리는 지금 창에 보이는 범위다(긴 휴대폰 화면이면 무대 양옆 여백까지 헤엄친다).
+      const towardEdge = (actor.facing > 0 && actor.x > visible.right - margin) || (actor.facing < 0 && actor.x < visible.left + margin);
+      const inside = actor.x > visible.left + margin * 0.5 && actor.x < visible.right - margin * 0.5;
       const near = (range: number): boolean =>
         threats.some(([px, py, width]) => {
           const ahead = (px - actor.x) * actor.facing;
@@ -855,7 +860,7 @@ export class Aquarium {
     retain(this.actors, (actor) => {
       const reach = species[actor.species].frameW;
       const tall = species[actor.species].frameH;
-      const outside = actor.x < -reach || actor.x > WIDTH + reach || actor.y < -tall || actor.y > HEIGHT + tall;
+      const outside = actor.x < visible.left - reach || actor.x > visible.right + reach || actor.y < -tall || actor.y > HEIGHT + tall;
       return !(actor.isLeaving() && outside) && actor.age < actor.lifespan + LINGER && actor.burrow < BURROW_SECONDS;
     });
     const actors = this.actors;
@@ -989,7 +994,7 @@ export class Aquarium {
     } else if (entry.motion === "sessile") {
       x = 30 + this.random() * (WIDTH - 60);
     } else if (faceTravel(entry) || grounded(entry)) {
-      x = facing > 0 ? -entry.frameW * 0.5 - 4 : WIDTH + entry.frameW * 0.5 + 4;
+      x = offstage(facing > 0 ? -entry.frameW * 0.5 - 4 : WIDTH + entry.frameW * 0.5 + 4);
     } else {
       x = 40 + this.random() * (WIDTH - 80);
     }
@@ -1062,7 +1067,7 @@ export class Aquarium {
     const id = this.nextSchool;
     this.nextSchool += 1;
     const heading = initial || this.random() < 0.5 ? 1 : -1;
-    const x = initial ? 90 : heading > 0 ? -30 : WIDTH + 30;
+    const x = initial ? 90 : offstage(heading > 0 ? -30 : WIDTH + 30);
     const lifespan = f32(60 + f32(this.random() * 30));
     const phase = this.random() * TAU;
     const school = new School({ id, x, y: 140, heading, age: 0, lifespan, phase, lift: 0 });

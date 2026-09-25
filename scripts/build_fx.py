@@ -26,6 +26,9 @@ ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "art"
 OUT = ROOT / "public/assets/fx"
 W, H = 480, 270
+# 휴대폰 가로 화면(약 2.17:1)에 맞춘 보이는 월드 폭과 무대 양옆 여백이다(src/sim/constants.ts와 같다).
+VIEW_W = 588
+MARGIN = (VIEW_W - W) // 2
 
 
 def band(level: np.ndarray, steps: int) -> np.ndarray:
@@ -79,9 +82,10 @@ def voronoi_edges(w: int, h: int, t: float, seed: int, cells: int, squash: float
 
 
 def caustics(scene: str) -> None:
-    """바닥 위에만 비치는 물결 빛. 그 배경 바닥 띠의 밝은 땅 픽셀로 가린 480x48 프레임 8장이다."""
-    cw, ch, frames = W, 48, 8
-    image = Image.open(OUT / f"scene-{scene}-floor.png").convert("RGBA").crop((16, 0, 16 + W, ch))
+    """바닥 위에만 비치는 물결 빛. 그 배경 바닥 띠의 밝은 땅 픽셀로 가린 588x48 프레임 8장이다(보이는 월드 폭)."""
+    cw, ch, frames = VIEW_W, 48, 8
+    left = (FLOOR_SIZE[0] + 2 * SIDE - VIEW_W) // 2
+    image = Image.open(OUT / f"scene-{scene}-floor.png").convert("RGBA").crop((left, 0, left + VIEW_W, ch))
     ground = np.array(image).astype(np.int32)
     luma = ground[..., 0] * 0.3 + ground[..., 1] * 0.59 + ground[..., 2] * 0.11
     sand = (ground[..., 3] > 0) & (luma > 95)
@@ -182,20 +186,31 @@ def skylight() -> None:
 
 
 def vignette() -> None:
-    ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
-    dx = (xs - W / 2) / (W / 2)
+    """보이는 월드(588×270) 전체에 까는 비네트다. 16:9 창에서는 양옆이 잘린 가운데만 보인다."""
+    ys, xs = np.mgrid[0:H, 0:VIEW_W].astype(np.float32)
+    dx = (xs - VIEW_W / 2) / (VIEW_W / 2)
     dy = np.maximum(ys - H * 0.35, 0.0) / (H * 0.65)
     level = np.clip((np.sqrt(dx * dx * 0.8 + dy * dy * 0.6) - 0.7) / 0.5, 0.0, 1.0) ** 1.5
-    out = np.zeros((H, W, 4))
+    out = np.zeros((H, VIEW_W, 4))
     out[..., :3] = [4, 10, 30]
     out[..., 3] = band(level * 0.45, 5) * 255
     save(out, "vignette.png")
 
 
 # 카메라가 흔들려도 가장자리가 드러나지 않도록 층마다 여백을 둔다(패럴랙스 계수 × 표류 폭보다 크게).
+# 층은 16:9 무대 기준 크기로 굽고(원본 구도 그대로), 휴대폰 가로 화면에서만 보이는 양옆은 가장자리를 거울로 이어 붙여 넓힌다.
+# 넓힌 뒤 폭은 보이는 월드(588)에 화면 흔들림 여유를 더한 값이고, backdrop.ts가 가운데를 맞춰 깐다.
 FAR_SIZE = (500, 282)
 MID_SIZE = (512, 288)
 FLOOR_SIZE = (512, 48)
+SIDE = 55
+
+
+def widen(name: str) -> None:
+    """굽힌 층의 양옆을 가장자리 거울로 SIDE픽셀씩 늘린다. 16:9 창에서는 잘려 안 보이는 부분이다."""
+    image = np.array(Image.open(OUT / name).convert("RGBA"))
+    wide = np.pad(image, ((0, 0), (SIDE, SIDE), (0, 0)), mode="symmetric")
+    Image.fromarray(wide, "RGBA").save(OUT / name)
 
 
 def parallax(scene: str, far_source: str, mid_source: str) -> None:
@@ -491,6 +506,8 @@ def scenes() -> list[str]:
             scene_floor(scene, floor)
         else:
             reef_floor()
+        for layer in ("far", "deep", "back", "mid", "floor"):
+            widen(f"scene-{scene}-{layer}.png")
         caustics(scene)
         built.append(scene)
     return built

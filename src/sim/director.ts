@@ -3,8 +3,8 @@
 // Aquarium을 다루는 사건 로직은 `game`을 받는 함수로 둔다.
 
 import type { Aquarium } from "./aquarium";
-import { bigBody, faceTravel, grounded, type Species } from "./catalog";
-import { FLOOR_Y, HEIGHT, TAU, TURN_SECONDS, WIDTH } from "./constants";
+import { bigBody, faceTravel, glowPoint as lightOf, grounded, type Species } from "./catalog";
+import { FLOOR_Y, HEIGHT, TAU, TURN_SECONDS, WIDTH, offstage, visible } from "./constants";
 import { Particle, type ParticleKind, Tentacle } from "./life";
 import { f32, pickIndex, retain, signum } from "./num";
 import { EXTRA_INFO, EXTRA_KINDS, extraPool, extraRarity, extraSceneOk, extraWhen, finishExtra, isExtra, startExtra, stepExtra } from "./vignettes";
@@ -18,8 +18,9 @@ export type Script =
   /** 다른 생물(`leader` id)의 옆을 일정 간격으로 따라간다. */
   | { kind: "Follow"; leader: number; dx: number; dy: number };
 
+/** 사건 이동 스크립트다. 무대 밖 목표(퇴장 자리)는 휴대폰 여백 바깥까지 민다. */
 export function goto(x: number, y: number, speed: number): Script {
-  return { kind: "Goto", x, y, speed };
+  return { kind: "Goto", x: offstage(x), y, speed };
 }
 
 export const EVENT_KINDS = [
@@ -291,7 +292,7 @@ export class FarThing {
     // 고래는 멀리서 천천히 들어오고, 사건으로 부른 오징어·잠수정은 곧바로 보이게 가까이서 출발한다.
     const margin = kind === "Whale" ? 130 : 70;
     this.kind = kind;
-    this.x = facing > 0 ? -margin : WIDTH + margin;
+    this.x = offstage(facing > 0 ? -margin : WIDTH + margin);
     this.y = y;
     this.facing = facing;
   }
@@ -312,7 +313,7 @@ export class FarThing {
     this.age = f32(this.age + dt);
     this.x = f32(this.x + f32(this.facing * this.speed() * dt));
     this.anim = f32(this.anim + f32(dt * 4));
-    return this.x >= -150 && this.x < WIDTH + 150;
+    return this.x >= visible.left - 150 && this.x < visible.right + 150;
   }
 }
 
@@ -469,6 +470,8 @@ export function cast(game: Aquarium, species: string, x: number, y: number, faci
   if (index === null) return null;
   const slot = game.spawn(index, false);
   const actor = game.actors[slot];
+  // 무대 밖 등장 자리는 휴대폰 여백 바깥까지 민다(긴 화면 여백에서 갑자기 나타나지 않게).
+  x = offstage(x);
   actor.x = x;
   actor.y = y;
   actor.targetY = y;
@@ -1814,10 +1817,7 @@ export function flashAt(game: Aquarium, x: number, y: number, kind: ParticleKind
 /** 발광 생물의 빛나는 점(루어) 월드 좌표다. */
 function glowPoint(game: Aquarium, slot: number): [number, number] {
   const actor = game.actors[slot];
-  const species = game.species[actor.species];
-  const [gx, gy] = species.glowCenter ?? [0, 0];
-  const facing = faceTravel(species) ? actor.facing : 1;
-  return [actor.x + gx * facing, actor.y + gy];
+  return lightOf(game.species[actor.species], actor.x, actor.y, actor.facing);
 }
 
 /** 지나가는 큰 생물 둘레의 작은 물고기만 옆으로 비켜나게 한다(화면 일렁임 없이). */

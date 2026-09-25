@@ -171,9 +171,10 @@
   "visitor": false,
   "glow_texture": "assets/species/moon-jelly-glow.png",
   "glow_center": [
-   -0.6547619047619051,
-   -2.5892857142857153
-  ]
+   -0.5432098765432087,
+   -3.080246913580247
+  ],
+  "glow_radius": 17.5
  },
  {
   "id": "sea-nettle",
@@ -302,9 +303,10 @@
   "visitor": false,
   "glow_texture": "assets/species/anglerfish-glow.png",
   "glow_center": [
-   10.733333333333334,
-   -1.0
-  ]
+   17.75,
+   -2.833333333333334
+  ],
+  "glow_radius": 2.0
  },
  {
   "id": "firefly-squid",
@@ -324,7 +326,8 @@
   "glow_center": [
    -0.5999999999999996,
    -1.2999999999999998
-  ]
+  ],
+  "glow_radius": 9.5
  },
  {
   "id": "regal-angelfish",
@@ -417,9 +420,10 @@
   "visitor": false,
   "glow_texture": "assets/species/blue-moon-jelly-glow.png",
   "glow_center": [
-   -0.6206225680933848,
-   -5.6303501945525305
-  ]
+   -0.5331950207468878,
+   -6.605809128630707
+  ],
+  "glow_radius": 18.0
  },
  {
   "id": "california-two-spot-octopus",
@@ -1043,13 +1047,19 @@
   "motion": "fish",
   "activity": "day",
   "frame_w": 42,
-  "frame_h": 31,
+  "frame_h": 19,
   "frames": 6,
   "texture": "assets/species/flying-fish.png",
   "normal": "assets/species/flying-fish-normal.png",
   "glow": false,
   "group": "pelagic",
-  "visitor": false
+  "visitor": false,
+  "alt": {
+   "texture": "assets/species/flying-fish-pose.png",
+   "frame_w": 41,
+   "frame_h": 31,
+   "kind": "pose"
+  }
  },
  {
   "id": "needlefish",
@@ -1448,7 +1458,7 @@
   "motion": "glide",
   "activity": "any",
   "frame_w": 68,
-  "frame_h": 29,
+  "frame_h": 25,
   "frames": 8,
   "texture": "assets/species/harbor-seal.png",
   "normal": "assets/species/harbor-seal-normal.png",
@@ -1462,8 +1472,8 @@
   "name_ko": "캘리포니아바다사자",
   "motion": "glide",
   "activity": "day",
-  "frame_w": 75,
-  "frame_h": 47,
+  "frame_w": 76,
+  "frame_h": 30,
   "frames": 8,
   "texture": "assets/species/california-sea-lion.png",
   "normal": "assets/species/california-sea-lion-normal.png",
@@ -1478,7 +1488,7 @@
   "motion": "glide",
   "activity": "any",
   "frame_w": 94,
-  "frame_h": 50,
+  "frame_h": 43,
   "frames": 8,
   "texture": "assets/species/walrus.png",
   "normal": "assets/species/walrus-normal.png",
@@ -1547,9 +1557,10 @@
   "visitor": false,
   "glow_texture": "assets/species/flower-hat-jelly-glow.png",
   "glow_center": [
-   -0.6921086675291086,
-   -2.108020698576972
-  ]
+   -0.7044854881266502,
+   -1.9182058047493413
+  ],
+  "glow_radius": 22.5
  },
  {
   "id": "upside-down-jelly",
@@ -1599,7 +1610,8 @@
   "glow_center": [
    1.5,
    -3.5
-  ]
+  ],
+  "glow_radius": 1.0
  },
  {
   "id": "dumbo-octopus",
@@ -1694,7 +1706,8 @@
   "glow_center": [
    -1.0,
    -2.5
-  ]
+  ],
+  "glow_radius": 2.5
  },
  {
   "id": "giant-clam",
@@ -1976,9 +1989,10 @@
   "visitor": false,
   "glow_texture": "assets/species/black-dragonfish-glow.png",
   "glow_center": [
-   11.642857142857146,
-   -1.2142857142857144
-  ]
+   16.75,
+   -0.75
+  ],
+  "glow_radius": 1.5
  },
  {
   "id": "viperfish",
@@ -1998,7 +2012,8 @@
   "glow_center": [
    6.199999999999999,
    2.6999999999999993
-  ]
+  ],
+  "glow_radius": 12.0
  },
  {
   "id": "silver-hatchetfish",
@@ -2018,7 +2033,8 @@
   "glow_center": [
    -1.0,
    -1.0
-  ]
+  ],
+  "glow_radius": 1.5
  },
  {
   "id": "lanternfish",
@@ -2038,7 +2054,8 @@
   "glow_center": [
    0.0,
    -1.0
-  ]
+  ],
+  "glow_radius": 1.5
  },
  {
   "id": "flashlight-fish",
@@ -2058,7 +2075,8 @@
   "glow_center": [
    9.666666666666668,
    2.333333333333334
-  ]
+  ],
+  "glow_radius": 2.5
  },
  {
   "id": "fangtooth",
@@ -2153,7 +2171,8 @@
   "glow_center": [
    -0.006896551724137723,
    -0.18620689655172384
-  ]
+  ],
+  "glow_radius": 11.0
  },
  {
   "id": "rainbow-comb-jelly",
@@ -2171,9 +2190,10 @@
   "visitor": false,
   "glow_texture": "assets/species/rainbow-comb-jelly-glow.png",
   "glow_center": [
-   -0.6319999999999997,
-   -6.002666666666666
-  ]
+   -0.8882521489971342,
+   -7.670487106017191
+  ],
+  "glow_radius": 22.0
  },
  {
   "id": "siphonophore",
@@ -2191,9 +2211,10 @@
   "visitor": false,
   "glow_texture": "assets/species/siphonophore-glow.png",
   "glow_center": [
-   8.045643153526974,
-   -2.2572614107883826
-  ]
+   8.944206008583691,
+   -2.4034334763948504
+  ],
+  "glow_radius": 21.0
  },
  {
   "id": "atolla-jelly",
@@ -2211,9 +2232,10 @@
   "visitor": false,
   "glow_texture": "assets/species/atolla-jelly-glow.png",
   "glow_center": [
-   -0.5087719298245617,
-   -5.0818713450292385
-  ]
+   -0.5327380952380949,
+   -5.223214285714285
+  ],
+  "glow_radius": 17.0
  },
  {
   "id": "glass-squid",
@@ -2233,7 +2255,8 @@
   "glow_center": [
    2.216666666666665,
    -0.43333333333333357
-  ]
+  ],
+  "glow_radius": 9.5
  },
  {
   "id": "leafy-seadragon",
@@ -3111,8 +3134,8 @@
   "name_ko": "큰바다사자",
   "motion": "glide",
   "activity": "any",
-  "frame_w": 90,
-  "frame_h": 57,
+  "frame_w": 89,
+  "frame_h": 39,
   "frames": 8,
   "texture": "assets/species/steller-sea-lion.png",
   "normal": "assets/species/steller-sea-lion-normal.png",
@@ -3127,7 +3150,7 @@
   "motion": "glide",
   "activity": "day",
   "frame_w": 50,
-  "frame_h": 21,
+  "frame_h": 18,
   "frames": 8,
   "texture": "assets/species/marine-iguana.png",
   "normal": "assets/species/marine-iguana-normal.png",

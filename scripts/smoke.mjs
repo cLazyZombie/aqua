@@ -25,6 +25,61 @@ function executablePath() {
   return undefined;
 }
 
+/// 휴대폰(아이폰 17 가로 874×402, 3배 화면, 터치)에서 탭으로 시작·먹이, 길게 눌러 유리 두드리기, 메뉴로 도감 열고 닫기, 세로 안내를 본다.
+async function mobile(browser, url, errors) {
+  const context = await browser.newContext({ viewport: { width: 874, height: 402 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+  const page = await context.newPage();
+  page.on("pageerror", (e) => errors.push(`[mobile] ${e.message}`));
+  page.on("console", (m) => m.type() === "error" && errors.push(`[mobile] ${m.text()}`));
+  await page.goto(url);
+  await page.waitForFunction(() => window.__aquaReady === true || window.__aquaError !== undefined, null, { timeout: 60000 });
+  await page.waitForTimeout(800);
+  const live = () => page.evaluate(() => window.__aquaLive());
+  const title = await page.evaluate(() => document.getElementById("ui").textContent);
+  if (!title.includes("TAP TO START")) errors.push(`[mobile] title should ask for a tap: ${title}`);
+  await page.screenshot({ path: resolve(OUTPUT, "smoke-mobile-title.png") });
+  await page.touchscreen.tap(437, 300);
+  await page.waitForTimeout(300);
+  if (!(await live()).started) errors.push("[mobile] tap should start the game");
+  if (await page.locator("#menu-button").isHidden()) errors.push("[mobile] menu button should show after start");
+  // 빈 물(위쪽 가운데)을 탭하면 가루 먹이, 길게 누르면 유리 두드리기 일렁임이다.
+  await page.touchscreen.tap(437, 120);
+  await page.waitForTimeout(200);
+  const fed = await live();
+  if (fed.food < 1) errors.push(`[mobile] tap should drop food: ${JSON.stringify(fed)}`);
+  const cdp = await context.newCDPSession(page);
+  const point = [{ x: 300, y: 110 }];
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: point });
+  await page.waitForTimeout(650);
+  const held = await live();
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  if (held.ripples < 1 && held.hover === null) errors.push(`[mobile] long press should tap the glass or react: ${JSON.stringify(held)}`);
+  await page.screenshot({ path: resolve(OUTPUT, "smoke-mobile-live.png") });
+  // 메뉴 → 도감 열기, 가운데 탭으로 닫기. 오른쪽 탭은 쪽 넘기기.
+  await page.locator("#menu-button").tap();
+  await page.locator('#menu button[data-action="dex"]').tap();
+  await page.waitForTimeout(200);
+  if (!(await live()).dex) errors.push("[mobile] menu should open the dex");
+  await page.screenshot({ path: resolve(OUTPUT, "smoke-mobile-dex.png") });
+  await page.touchscreen.tap(820, 200);
+  await page.waitForTimeout(100);
+  if ((await live()).page < 1) errors.push("[mobile] tapping the right side should turn the dex page");
+  await page.touchscreen.tap(437, 200);
+  await page.waitForTimeout(100);
+  if ((await live()).dex) errors.push("[mobile] tapping the middle should close the dex");
+  await page.locator("#menu-button").tap();
+  await page.locator('#menu button[data-action="flashlight"]').tap();
+  if (!(await live()).flashlight) errors.push("[mobile] menu should turn on the flashlight");
+  // 세로로 들면 가로로 돌려 달라는 안내가 뜬다.
+  await page.setViewportSize({ width: 402, height: 874 });
+  await page.waitForTimeout(300);
+  const rotate = await page.evaluate(() => getComputedStyle(document.getElementById("rotate")).display);
+  if (rotate === "none") errors.push("[mobile] portrait should show the rotate hint");
+  await page.screenshot({ path: resolve(OUTPUT, "smoke-mobile-portrait.png") });
+  console.log(`mobile: title tap, food ${fed.food}, long press ripples ${held.ripples} hover ${held.hover}, dex menu, flashlight, rotate hint ${rotate}`);
+  await context.close();
+}
+
 mkdirSync(OUTPUT, { recursive: true });
 if (!process.env.AQUA_SKIP_BUILD) await build({ root: ROOT, logLevel: "error" });
 const server = await preview({ root: ROOT, logLevel: "error", preview: { port: 0 } });
@@ -105,6 +160,7 @@ try {
   await page.waitForTimeout(300);
   await page.screenshot({ path: resolve(OUTPUT, "smoke-dex.png") });
   const state = await page.evaluate(() => window.__aquaError ?? "ok");
+  await mobile(browser, `http://localhost:${server.httpServer.address().port}/`, errors);
   console.log(`smoke: ${state}, errors=${errors.length}`);
   for (const e of errors) console.log("  ", e);
   if (errors.length || state !== "ok") process.exitCode = 1;

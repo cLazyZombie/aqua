@@ -112,7 +112,7 @@ function drawer(random: () => number, items: number[]): () => number {
   };
 }
 
-/// 컨셉에 맞는 소품을 뒷줄·앞줄·바닥에 흩어 놓는다. 키 큰 풀은 바깥쪽에, 가운데(175~305)는 비운다.
+/// 컨셉에 맞는 소품을 뒷줄·앞줄·바닥에 흩어 놓는다. 키 큰 풀은 바깥쪽에, 가운데(175~305)는 비운다. 휴대폰 화면 여백에도 한 줄씩 더한다.
 export function makeLayout(props: PropInfo[], scene: string, seed: number): Placement[] {
   const random = seededRandom(seed);
   const style = SCENE_STYLES[scene] ?? SCENE_STYLES.reef;
@@ -150,6 +150,15 @@ export function makeLayout(props: PropInfo[], scene: string, seed: number): Plac
     ], 30)) {
       placements.push({ prop: nextClam(), x, row: "floor", flip: random() < 0.5, phase: random() });
     }
+  }
+  // 휴대폰 가로 화면에서만 보이는 무대 양옆 여백(-54..0, 480..534)에도 뒷줄·앞줄 소품을 하나씩 세운다.
+  // 무대 소품을 다 뽑은 뒤에 뽑으므로 16:9 창의 배치는 전과 같다.
+  for (const zone of [
+    [-46, -12],
+    [492, 526],
+  ] as [number, number][]) {
+    row("back", [zone], 1, style.tall[0] > 0 ? 1 : 0, 20);
+    row("front", [[zone[0] - 4, zone[1] + 4]], 1, 0, 22);
   }
   return placements;
 }

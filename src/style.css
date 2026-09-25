@@ -7,6 +7,13 @@ body {
   height: 100%;
   overflow: hidden;
   background: #03091a;
+  /* 휴대폰: 두 손가락 확대·스크롤·당겨서 새로고침·길게 눌러 뜨는 메뉴·탭 강조를 막는다(게임이 모든 터치를 쓴다). */
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #stage {
@@ -46,8 +53,8 @@ body {
 /* 소리 켜기/끄기 같은 짧은 알림: 오른쪽 위에 잠깐 떴다 사라진다. */
 #toast {
   position: absolute;
-  top: 12px;
-  right: 14px;
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(60px + env(safe-area-inset-right));
   font-family: Galmuri, monospace;
   font-size: 16px;
   color: #f0fdfa;
@@ -59,4 +66,96 @@ body {
 
 #toast.show {
   opacity: 1;
+}
+
+/* 터치 화면 메뉴: 오른쪽 위 작은 버튼(노치·둥근 모서리 안쪽)과 세로로 쌓인 기능 목록. 화면 가운데는 비워 둔다. */
+#menu-button {
+  position: absolute;
+  top: calc(8px + env(safe-area-inset-top));
+  right: calc(8px + env(safe-area-inset-right));
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(150, 220, 240, 0.7);
+  border-radius: 8px;
+  background: rgba(8, 24, 46, 0.55);
+  color: #e6f6ff;
+  font: 20px/1 Galmuri, monospace;
+  padding: 0;
+  touch-action: manipulation;
+}
+
+#menu {
+  position: absolute;
+  top: calc(54px + env(safe-area-inset-top));
+  right: calc(8px + env(safe-area-inset-right));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid rgba(150, 220, 240, 0.8);
+  border-radius: 8px;
+  background: rgba(8, 24, 46, 0.9);
+}
+
+#menu[hidden],
+#menu-button[hidden] {
+  display: none;
+}
+
+#menu button {
+  min-width: 132px;
+  min-height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: rgba(40, 80, 120, 0.6);
+  color: #e6f6ff;
+  font: 14px Galmuri, monospace;
+  text-align: left;
+  padding: 0 12px;
+  touch-action: manipulation;
+}
+
+#menu button:active {
+  background: rgba(90, 150, 190, 0.8);
+}
+
+/* 세로로 든 휴대폰: 가로로 돌려 달라는 안내를 덮는다(게임은 가로 화면에 맞췄다). */
+#rotate {
+  display: none;
+}
+
+@media (orientation: portrait) and (pointer: coarse) {
+  #rotate {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    background: rgba(3, 9, 26, 0.86);
+    color: #f0fdfa;
+    font: 18px Galmuri, monospace;
+    text-shadow: 2px 2px 0 #04102c;
+  }
+
+  #rotate .phone {
+    width: 34px;
+    height: 58px;
+    border: 3px solid #96dcf0;
+    border-radius: 7px;
+    animation: rotate-hint 2.4s ease-in-out infinite;
+  }
+}
+
+@keyframes rotate-hint {
+  0%,
+  30% {
+    transform: rotate(0deg);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
 }

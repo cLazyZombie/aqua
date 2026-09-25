@@ -63,6 +63,10 @@ export const SCENARIOS = [
   { name: "size-1280x720", seconds: 16, started: true, size: "1280x720" },
   { name: "size-1280x720-integer", seconds: 16, started: true, size: "1280x720", integer: true },
   { name: "size-1000x800", seconds: 16, started: true, size: "1000x800" },
+  // 휴대폰 가로 화면(아이폰 17, 약 2.17:1): 588×270 월드가 화면을 꼭 채우고, 무대 양옆 여백까지 보인다.
+  { name: "size-phone", seconds: 16, started: true, size: "1176x540" },
+  { name: "size-phone-title", seconds: 0, started: false, size: "1176x540" },
+  { name: "size-phone-kelp-night", seconds: 124, started: true, size: "1176x540", scene: "kelp" },
   { name: "event-chest", seconds: 32, started: true, event: "treasure-chest", eventAt: 10 },
   { name: "event-patrol", seconds: 14, started: true, event: "shark-patrol", eventAt: 12 },
   { name: "event-patrol-after", seconds: 26, started: true, event: "shark-patrol", eventAt: 12 },
@@ -92,6 +96,8 @@ export const SCENARIOS = [
   { name: "ambient-regular", seconds: 20.5, started: true, pointer: "240,125", cast: "whale-shark", castAt: 20, individual: 0 },
   { name: "ambient-dream", seconds: 186, started: true, pointer: "240,200", cast: "octopus", castAt: 178, hover: false },
   { name: "ambient-pop", seconds: 30, started: true, pointer: "62,150" },
+  // 먼 층 생물은 불투명하다: 켈프 숲 앞 먼 층에 상어를 불러 뒤 배경이 몸을 뚫고 보이지 않는지 본다.
+  { name: "far-shark", seconds: 20.2, started: true, pointer: "120,120", cast: "leopard-shark", castAt: 20, depth: 0, scene: "kelp", hover: false },
   ...GLOW_SCENARIOS,
   ...NIGHT_EVENT_SCENARIOS,
   ...EXTRA_EVENT_SCENARIOS,
@@ -116,7 +122,7 @@ export function webQuery(scenario, seed = 7) {
   if (scenario.flashlight) q.set("flashlight", "1");
   if (scenario.dex) q.set("dex", "1");
   if (scenario.hover === false) q.set("hover", "0");
-  for (const key of ["cast", "castAt", "reactAt", "treatAt", "variant", "individual", "scene", "layout"]) {
+  for (const key of ["cast", "castAt", "reactAt", "treatAt", "variant", "individual", "scene", "layout", "depth"]) {
     if (scenario[key] !== undefined) q.set(key, String(scenario[key]));
   }
   return q.toString();

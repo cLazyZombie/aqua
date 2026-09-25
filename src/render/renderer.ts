@@ -13,6 +13,7 @@ import fullscreenVert from "./shaders/fullscreen.vert?raw";
 import litFrag from "./shaders/lit.frag?raw";
 import pulseFrag from "./shaders/pulse.frag?raw";
 import silhouetteFrag from "./shaders/silhouette.frag?raw";
+import wavyFrag from "./shaders/wavy.frag?raw";
 import solidFrag from "./shaders/solid.frag?raw";
 import spriteVert from "./shaders/sprite.vert?raw";
 import textureFrag from "./shaders/texture.frag?raw";
@@ -272,6 +273,8 @@ export class Renderer {
         return `tex:${blend}:${this.textureId(material.texture)}`;
       case "silhouette":
         return `sil:${blend}:${this.textureId(material.texture)}`;
+      case "wavy":
+        return `wavy:${blend}:${this.textureId(material.texture)}:${material.amplitude}`;
       case "lit":
         return `lit:${blend}:${this.textureId(material.texture)}:${this.textureId(material.normal)}:${material.variant ?? 0}`;
     }
@@ -296,6 +299,10 @@ export class Renderer {
       case "silhouette":
         fragmentShader = silhouetteFrag;
         uniforms = { uViewport, uMap: { value: material.texture } };
+        break;
+      case "wavy":
+        fragmentShader = wavyFrag;
+        uniforms = { uViewport, uSun, uMap: { value: material.texture }, uAmp: { value: material.amplitude } };
         break;
       case "lit":
         fragmentShader = litFrag;

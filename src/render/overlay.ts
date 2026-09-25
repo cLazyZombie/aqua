@@ -4,7 +4,7 @@ import type { SceneAssets } from "./assets";
 import type { Frame, Rgba, Sprite, TextItem } from "./draw";
 import { WHITE, fract, fullUv, hash, mix, pixelRect, rgb, rgba, roundHalfAway, solids, textured } from "./draw";
 import type { View } from "./scene";
-import { type Aquarium, HEIGHT, WIDTH } from "./simapi";
+import { type Aquarium, HEIGHT, VIEW_LEFT, VIEW_WIDTH, WIDTH } from "./simapi";
 
 /// 색보정 띠, 노을, 폭풍의 비와 번개, 비네트.
 export function appendScreen(frame: Frame, view: View, game: Aquarium, assets: SceneAssets): void {
@@ -22,34 +22,35 @@ export function appendScreen(frame: Frame, view: View, game: Aquarium, assets: S
       warm = mix(warm, [255, 196, 120], golden * (0.25 + 0.6 * nearSurface));
       const gloomy = mix(warm, [128, 140, 158], storm * 0.7);
       const grade = mix(gloomy, [34, 50, 112], night);
-      rows.push(pixelRect(screen[0], screen[1] + y, WIDTH, 2, fullUv(), rgb(grade, 1), 30));
+      rows.push(pixelRect(screen[0] + VIEW_LEFT, screen[1] + y, VIEW_WIDTH, 2, fullUv(), rgb(grade, 1), 30));
     }
     frame.layers.push(solids("time-of-day", "multiply", rows));
   }
   if (twilight > 0.01 || golden > 0.01) {
     const tone = mix([255, 128, 70], [255, 190, 60], golden / Math.max(0.01, golden + twilight));
     const strength = Math.max(0.6 * twilight, 0.55 * golden);
-    frame.layers.push(textured("sunset", assets.skylight, "additive", [pixelRect(screen[0], screen[1], WIDTH, HEIGHT, fullUv(), rgb(tone, strength), 31)]));
+    frame.layers.push(textured("sunset", assets.skylight, "additive", [pixelRect(screen[0] + VIEW_LEFT, screen[1], VIEW_WIDTH, HEIGHT, fullUv(), rgb(tone, strength), 31)]));
   }
   if (storm > 0.01) appendRain(frame, view, game, storm);
   const flash = game.weather.flash;
   if (flash > 0.01) {
-    frame.layers.push(textured("lightning", assets.skylight, "additive", [pixelRect(screen[0], screen[1], WIDTH, HEIGHT, fullUv(), rgba(215, 235, 255, flash * 0.9), 35)]));
+    frame.layers.push(textured("lightning", assets.skylight, "additive", [pixelRect(screen[0] + VIEW_LEFT, screen[1], VIEW_WIDTH, HEIGHT, fullUv(), rgba(215, 235, 255, flash * 0.9), 35)]));
   }
-  frame.layers.push(textured("vignette", assets.vignette, "alpha", [pixelRect(screen[0], screen[1], WIDTH, HEIGHT, fullUv(), WHITE, 40)]));
+  frame.layers.push(textured("vignette", assets.vignette, "alpha", [pixelRect(screen[0] + VIEW_LEFT, screen[1], VIEW_WIDTH, HEIGHT, fullUv(), WHITE, 40)]));
 }
 
 /// 물속에서 올려다본 비. 수면 띠 위에 물결 고리가 번지고 물방울 왕관이 튀며 잔기포가 가라앉는다.
 function appendRain(frame: Frame, view: View, game: Aquarium, storm: number): void {
   const screen = view.shift(0);
   const light: Sprite[] = [];
-  for (let drop = 0; drop < 110; drop++) {
+  // 휴대폰 가로 화면의 보이는 월드 전체(588폭)에 뿌린다. 무대 안 밀도는 전과 같다.
+  for (let drop = 0; drop < 135; drop++) {
     const seed = drop * 7.31;
     const period = 0.55 + hash(seed) * 0.55;
     const clock = game.time + hash(seed + 1) * period;
     const cycle = Math.floor(clock / period);
     const t = fract(clock / period);
-    const x = hash(seed * 1.7 + cycle * 3.13) * (WIDTH + 20) - 10 + screen[0];
+    const x = hash(seed * 1.7 + cycle * 3.13) * (VIEW_WIDTH + 20) + VIEW_LEFT - 10 + screen[0];
     const depth = Math.pow(hash(seed * 2.3 + cycle * 1.91), 0.8);
     const y = 3 + depth * 24 + screen[1];
     const scale = 0.55 + depth * 0.9;
@@ -79,11 +80,11 @@ function appendRain(frame: Frame, view: View, game: Aquarium, storm: number): vo
       }
     }
   }
-  for (let glint = 0; glint < 60; glint++) {
+  for (let glint = 0; glint < 74; glint++) {
     const seed = glint * 3.9 + 400;
     const flicker = Math.pow(Math.sin(game.time * (9 + hash(seed) * 7) + hash(seed + 1) * 30) * 0.5 + 0.5, 8);
     if (flicker < 0.2) continue;
-    const x = hash(seed + 2) * WIDTH + screen[0];
+    const x = hash(seed + 2) * VIEW_WIDTH + VIEW_LEFT + screen[0];
     const y = 2 + hash(seed + 3) * 22 + screen[1];
     light.push(pixelRect(x, y, 2, 1, fullUv(), rgba(230, 245, 255, storm * flicker * 0.5), 32));
   }
@@ -120,7 +121,8 @@ export function appendPost(frame: Frame, view: View, game: Aquarium): void {
       });
     });
   }
-  const size: [number, number] = [(WIDTH * view.zoom) / view.viewport[0], (HEIGHT * view.zoom) / view.viewport[1]];
+  // 수중 후처리는 보이는 월드(588×270) 격자로 모은다. 16:9 창에서는 양옆이 화면 밖이라 잘린다.
+  const size: [number, number] = [(VIEW_WIDTH * view.zoom) / view.viewport[0], (HEIGHT * view.zoom) / view.viewport[1]];
   frame.post.push({
     kind: "screen",
     effect: {
@@ -216,7 +218,8 @@ function appendDex(frame: Frame, view: View, game: Aquarium): void {
   const PER_PAGE = 51;
   const pages = Math.max(1, Math.ceil(entries.length / PER_PAGE));
   const page = game.dex.page % pages;
-  const title = `목격 도감  ${seen}/${entries.length}   ◀ ${page + 1}/${pages} ▶   (←→ 넘기기, Tab 닫기)`;
+  const hint = game.look.touch ? "양옆을 눌러 넘기기, 가운데를 눌러 닫기" : "←→ 넘기기, Tab 닫기";
+  const title = `목격 도감  ${seen}/${entries.length}   ◀ ${page + 1}/${pages} ▶   (${hint})`;
   label(frame, view, [left, top + 3, width, 14], title, 11, [255, 236, 160, 255], "center");
   const columnWidth = (width - 20) / 3;
   entries.slice(page * PER_PAGE, page * PER_PAGE + PER_PAGE).forEach((entry, slot) => {
@@ -262,7 +265,7 @@ function appendTitle(frame: Frame, view: View, game: Aquarium): void {
     y: at(262),
     w: Math.trunc(view.viewport[0]),
     h: px(44),
-    text: "PRESS ANY KEY",
+    text: game.look.touch ? "TAP TO START" : "PRESS ANY KEY",
     fontSize: px(22),
     bold: false,
     color: [255, 236, 150, blink],

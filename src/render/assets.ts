@@ -47,6 +47,8 @@ export interface SceneLayers {
   /// 그 바닥 모양으로 가린 물결 빛(8프레임)이다.
   caustics: THREE.Texture;
   layout: Placement[];
+  /// 월드 줄마다 먼 물 층의 물색(가운데 열 평균)이다. 먼 층 생물을 물빛으로 가라앉히는 안개색으로 쓴다.
+  water: [number, number, number][];
 }
 
 /// 조명 머티리얼(색·노멀), 먼 층용 색 시트, 발광 마스크, 대체 모습을 함께 든 한 종의 그림이다.
@@ -126,6 +128,35 @@ function normalPath(texture: string): string {
 
 const shared = new Map<string, TextureCache>();
 
+/// 먼 물 층 그림에서 월드 줄(0..269)마다 가운데 열(바위가 없는 트인 물)의 평균색을 구한다.
+/// 먼 층 그림은 (-10, -6)에 500×282로 깔리므로 그 비율로 그림 줄을 고른다.
+function waterRows(texture: THREE.Texture): [number, number, number][] {
+  const image = texture.image as { width: number; height: number } & CanvasImageSource;
+  const rows: [number, number, number][] = [];
+  const canvas = document.createElement("canvas");
+  canvas.width = image.width;
+  canvas.height = image.height;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
+  if (!context) return Array.from({ length: 270 }, () => [60, 120, 170]);
+  context.drawImage(image, 0, 0);
+  const { data, width, height } = context.getImageData(0, 0, image.width, image.height);
+  const left = Math.floor(width * 0.4);
+  const right = Math.ceil(width * 0.6);
+  for (let y = 0; y < 270; y++) {
+    const row = Math.min(height - 1, Math.max(0, Math.floor(((y + 6) / 282) * height)));
+    const sum = [0, 0, 0];
+    for (let x = left; x < right; x++) {
+      const at = (row * width + x) * 4;
+      sum[0] += data[at];
+      sum[1] += data[at + 1];
+      sum[2] += data[at + 2];
+    }
+    const count = right - left;
+    rows.push([sum[0] / count, sum[1] / count, sum[2] / count]);
+  }
+  return rows;
+}
+
 /// 배경 컨셉 하나의 층 텍스처를 읽고 소품 배치를 만든다. 실행 중에 컨셉을 바꿀 때도 쓴다.
 export async function loadScene(id: string, props: Prop[], layoutSeed: number, root = "./"): Promise<SceneLayers> {
   let cache = shared.get(root);
@@ -135,7 +166,7 @@ export async function loadScene(id: string, props: Prop[], layoutSeed: number, r
   }
   const layer = (name: string) => cache.get(`assets/fx/scene-${id}-${name}.png`);
   const [far, deep, back, mid, floor, caustics] = await Promise.all(["far", "deep", "back", "mid", "floor", "caustics"].map(layer));
-  return { style: SCENE_STYLES[id] ?? SCENE_STYLES.reef, far, deep, back, mid, floor, caustics, layout: makeLayout(props, id, layoutSeed) };
+  return { style: SCENE_STYLES[id] ?? SCENE_STYLES.reef, far, deep, back, mid, floor, caustics, layout: makeLayout(props, id, layoutSeed), water: waterRows(far) };
 }
 
 export async function loadSceneAssets(catalog: Species[], sceneId: string, layoutSeed: number, root = "./"): Promise<SceneAssets> {

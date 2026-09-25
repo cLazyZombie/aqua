@@ -7,7 +7,7 @@ import { WHITE, rgba, roundHalfAway, textured } from "./draw";
 import { label, textWidth } from "./overlay";
 import { outlineOf, pixelsOf, solidAt } from "./pixels";
 import type { View } from "./scene";
-import { type Actor, type Aquarium, INDIVIDUAL_NAMES, VARIANT_NAMES, WIDTH } from "./simapi";
+import { type Actor, type Aquarium, INDIVIDUAL_NAMES, VARIANT_NAMES } from "./simapi";
 
 /// 월드 좌표 (x, y)에 보이는 가까운 층 생물을 찾는다. 몸 픽셀(작은 생물은 둘레 2px까지)을 눌러야 잡힌다.
 export function pick(game: Aquarium, assets: SceneAssets, x: number, y: number): Actor | null {
@@ -73,6 +73,9 @@ export function appendHover(frame: Frame, view: View, game: Aquarium, assets: Sc
   // 머리 위가 화면 밖이면 몸 아래에 띄운다.
   const above = top - 15 >= 4;
   const labelY = above ? top - 15 : sprite.cy + Math.abs(sprite.h) * 0.5 + 3;
-  const left = Math.min(Math.max(4, roundHalfAway(sprite.cx - width * 0.5)), WIDTH - 4 - width);
+  // 이름은 이 창에 보이는 월드 안에 머문다(16:9 창은 무대, 휴대폰 가로 화면은 양옆 여백까지).
+  const half = view.viewport[0] / (2 * view.zoom);
+  const [visibleLeft, visibleRight] = [view.camera.cx - half, view.camera.cx + half];
+  const left = Math.min(Math.max(Math.ceil(visibleLeft) + 4, roundHalfAway(sprite.cx - width * 0.5)), Math.floor(visibleRight) - 4 - width);
   label(frame, view, [left, labelY, width, 12], text, 10, [255, 246, 196, Math.trunc(255 * fade)], "center");
 }

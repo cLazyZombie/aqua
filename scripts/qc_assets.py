@@ -58,7 +58,7 @@ def main() -> None:
             assert glow[0].size == frames[0].size, entry["id"]
             assert glow[0].getchannel("A").getbbox(), f"{entry['id']} glow is empty"
     for name, size in [("shadow.png", (32, 8)), ("whale.png", (196 * 8, 81)),
-                       ("background.png", WORLD), ("vignette.png", WORLD), ("haze.png", (1, 270)),
+                       ("background.png", WORLD), ("vignette.png", (588, 270)), ("haze.png", (1, 270)),
                        ("skylight.png", (1, 270)), ("surface.png", (240 * 8, 30)), ("rays.png", (56 * 3, 250)),
                        ("bubbles.png", (21, 7))]:
         image = Image.open(PUBLIC / "assets/fx" / name)
@@ -67,8 +67,9 @@ def main() -> None:
     scenes = json.loads((DATA / "scenes.json").read_text())
     assert "reef" in scenes and len(scenes) >= 4, scenes
     for scene in scenes:
-        for layer, size in (("far", (500, 282)), ("deep", (500, 170)), ("back", (512, 230)), ("mid", (512, 288)),
-                            ("floor", (512, 48)), ("caustics", (480 * 8, 48))):
+        # 층은 무대 기준 크기에 휴대폰 가로 화면용 양옆 여백(55px씩)을 거울로 이어 붙인 폭이다. 물결 빛은 보이는 월드 폭(588)이다.
+        for layer, size in (("far", (610, 282)), ("deep", (610, 170)), ("back", (622, 230)), ("mid", (622, 288)),
+                            ("floor", (622, 48)), ("caustics", (588 * 8, 48))):
             image = Image.open(PUBLIC / "assets/fx" / f"scene-{scene}-{layer}.png").convert("RGBA")
             assert image.size == size, f"{scene} {layer}: {image.size}"
         far = Image.open(PUBLIC / "assets/fx" / f"scene-{scene}-far.png").convert("RGBA")

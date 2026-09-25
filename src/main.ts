@@ -8,8 +8,8 @@ import { clamStates } from "./render/backdrop";
 import { availableScenes, pickScene } from "./render/scenes";
 import { Renderer } from "./render/renderer";
 import { displayName, pick } from "./render/interact";
-import { buildFrame, screenToWorld } from "./render/scene";
-import { Aquarium, Dex, type EventKind, SCREEN_HEIGHT, SCREEN_WIDTH, eventFromId, eventId, loadAll } from "./render/simapi";
+import { buildFrame, screenToWorld, visibleRange } from "./render/scene";
+import { Aquarium, Dex, type EventKind, SCREEN_HEIGHT, SCREEN_WIDTH, eventFromId, eventId, loadAll, setVisibleRange } from "./render/simapi";
 import { TextLayer } from "./render/text";
 
 declare global {
@@ -19,6 +19,7 @@ declare global {
     __aquaError?: string;
     __aquaEnter?: () => Promise<void>;
     __aquaSound?: Sound;
+    __aquaLive?: () => { started: boolean; dex: boolean; page: number; flashlight: boolean; food: number; ripples: number; hover: string | null; touch: boolean; pointer: [number, number] | null };
   }
 }
 
@@ -82,6 +83,8 @@ class App {
     const height = fixed ? fixed[1] : Math.max(1, window.innerHeight);
     this.viewport = [width, height];
     this.pixelRatio = ratio;
+    // 생물 등장·퇴장·돌아서기 가장자리를 이 창에 보이는 월드 범위에 맞춘다(휴대폰 가로 화면은 무대 양옆 여백까지).
+    setVisibleRange(...visibleRange(this.viewport, this.game.look.integer));
     this.renderer.resize(width * ratio, height * ratio, ratio, width, height);
   }
 
@@ -127,6 +130,54 @@ function toast(stage: HTMLElement, text: string): void {
   note.dataset.timer = String(window.setTimeout(() => note.classList.remove("show"), 1400));
 }
 
+/// 길게 누르면 교감(마우스 오른쪽)으로 보는 시간(ms)이다.
+const LONG_PRESS = 450;
+/// 이만큼(px) 넘게 움직이면 탭·길게 누르기가 아니라 끌기(기포 터뜨리기·둘러보기)다.
+const DRAG_SLOP = 12;
+
+/// 터치 화면용 메뉴: 오른쪽 위 작은 버튼을 누르면 키보드 기능(도감·손전등·소리·배경·사건·전체 화면)을 고른다.
+function touchMenu(stage: HTMLElement, items: [string, () => string, () => void][]): { show: (visible: boolean) => void } {
+  const button = document.createElement("button");
+  button.id = "menu-button";
+  button.type = "button";
+  button.setAttribute("aria-label", "메뉴");
+  button.textContent = "☰";
+  const panel = document.createElement("div");
+  panel.id = "menu";
+  panel.hidden = true;
+  const close = () => (panel.hidden = true);
+  const fill = () => {
+    panel.replaceChildren(
+      ...items.map(([id, label, run]) => {
+        const entry = document.createElement("button");
+        entry.type = "button";
+        entry.dataset.action = id;
+        entry.textContent = label();
+        entry.addEventListener("click", () => {
+          run();
+          close();
+        });
+        return entry;
+      }),
+    );
+  };
+  button.addEventListener("click", () => {
+    fill();
+    panel.hidden = !panel.hidden;
+  });
+  // 메뉴를 누른 것이 물속 탭(먹이 주기)으로 새지 않게 한다.
+  for (const element of [button, panel]) {
+    for (const kind of ["pointerdown", "pointerup", "mousedown", "contextmenu"]) element.addEventListener(kind, (event) => event.stopPropagation());
+  }
+  stage.append(button, panel);
+  return {
+    show(visible: boolean) {
+      button.hidden = !visible;
+      if (!visible) close();
+    },
+  };
+}
+
 /// 창 모드: 약 60fps로 한 걸음씩 진행하고 그린다.
 function runLive(app: App): void {
   const game = app.game;
@@ -134,20 +185,65 @@ function runLive(app: App): void {
   const stage = document.getElementById("stage") as HTMLDivElement;
   const sound = new Sound();
   window.__aquaSound = sound;
+  // 스모크 테스트가 창 모드 조작 결과를 읽는 훅이다.
+  window.__aquaLive = () => ({
+    started: game.started,
+    dex: game.dex.open,
+    page: game.dex.page,
+    flashlight: game.flashlight,
+    food: game.particles.filter((particle) => ["Food", "Cookie", "Leaf", "Pellet", "Glimmer"].includes(particle.kind)).length,
+    ripples: game.ripples().length,
+    hover: game.hover === null ? null : displayName(game, game.actors.find((actor) => actor.id === game.hover)!),
+    touch: game.look.touch,
+    pointer: game.pointer,
+  });
+  // 터치 화면이면 타이틀·도감 안내를 탭 조작으로 바꾸고 메뉴 버튼을 띄운다.
+  game.look.touch = window.matchMedia("(pointer: coarse)").matches;
   // 브라우저는 사용자 입력이 있어야 소리를 낼 수 있다(모바일은 터치를 뗄 때).
   for (const kind of ["pointerup", "touchend"]) window.addEventListener(kind, () => sound.unlock());
+
+  // 키보드와 터치 메뉴가 같은 동작을 부른다.
+  const toggleSound = () => toast(stage, sound.toggle() ? "소리 켬" : "소리 끔");
+  const toggleFullscreen = () => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void document.documentElement.requestFullscreen?.();
+  };
+  const toggleDex = () => {
+    game.dex.open = !game.dex.open;
+  };
+  const toggleFlashlight = () => {
+    game.flashlight = !game.flashlight;
+  };
+  const nextScene = () => {
+    // 배경 컨셉을 차례로 바꾸고 소품 배치도 새로 흩는다.
+    const scenes = availableScenes();
+    const next = scenes[(scenes.indexOf(app.sceneId) + 1) % scenes.length];
+    void app.switchScene(next, randomSeed());
+  };
+  const menu = touchMenu(stage, [
+    ["dex", () => "도감", toggleDex],
+    ["flashlight", () => (game.flashlight ? "손전등 끄기" : "손전등 켜기"), toggleFlashlight],
+    ["sound", () => (sound.enabled ? "소리 끄기" : "소리 켜기"), toggleSound],
+    ["scene", () => "배경 바꾸기", nextScene],
+    ["event", () => "사건 일으키기", () => game.triggerRandomEvent()],
+    // 아이폰 사파리는 전체 화면 API가 없다(홈 화면에 추가하면 전체 화면으로 열린다).
+    ...(document.fullscreenEnabled ? [["fullscreen", () => (document.fullscreenElement ? "전체 화면 끝내기" : "전체 화면"), toggleFullscreen] as [string, () => string, () => void]] : []),
+  ]);
+
   let last = performance.now();
   const loop = (now: number) => {
     requestAnimationFrame(loop);
     // 약 60fps(16ms 간격)로만 다시 그린다.
     if (now - last < 15.5) return;
-    app.syncSize(null, window.devicePixelRatio || 1);
+    // 후처리가 월드 픽셀로 다시 모으므로 기기 픽셀 비율은 2까지만 쓴다(휴대폰 3배 화면에서 그리기 비용을 줄인다).
+    app.syncSize(null, Math.min(2, window.devicePixelRatio || 1));
     const dt = (now - last) / 1000;
     game.step(dt);
     sound.update(game, Math.min(dt, 0.25));
     last = now;
     app.updateHover();
     stage.style.cursor = game.hover !== null ? "pointer" : "";
+    menu.show(game.look.touch && game.started);
     app.draw();
   };
   requestAnimationFrame(loop);
@@ -158,10 +254,9 @@ function runLive(app: App): void {
     if (code === "Tab" || code === "F11" || code.startsWith("Arrow")) event.preventDefault();
     if (code !== "KeyM") sound.unlock();
     if (code === "KeyM") {
-      toast(stage, sound.toggle() ? "소리 켬" : "소리 끔");
+      toggleSound();
     } else if (code === "KeyF" || code === "F11") {
-      if (document.fullscreenElement) void document.exitFullscreen();
-      else void document.documentElement.requestFullscreen?.();
+      toggleFullscreen();
     } else if (code === "KeyP") {
       game.look.palette = !game.look.palette;
     } else if (code === "KeyC") {
@@ -169,57 +264,111 @@ function runLive(app: App): void {
     } else if (code === "KeyI") {
       game.look.integer = !game.look.integer;
     } else if (code === "Tab") {
-      game.dex.open = !game.dex.open;
+      toggleDex();
     } else if (code === "ArrowRight" && game.dex.open) {
       game.dex.page += 1;
     } else if (code === "ArrowLeft" && game.dex.open) {
       game.dex.page = Math.max(0, game.dex.page - 1);
     } else if (code === "KeyL") {
-      game.flashlight = !game.flashlight;
+      toggleFlashlight();
     } else if (code === "KeyE" && game.started) {
       game.triggerRandomEvent();
     } else if (code === "KeyB") {
-      // 배경 컨셉을 차례로 바꾸고 소품 배치도 새로 흩는다.
-      const scenes = availableScenes();
-      const next = scenes[(scenes.indexOf(app.sceneId) + 1) % scenes.length];
-      void app.switchScene(next, randomSeed());
+      nextScene();
     } else if (!game.started) {
       game.started = true;
     }
     // Esc: 웹에서는 창을 닫지 않는다.
   });
-  stage.addEventListener("pointermove", (event) => {
-    game.pointer = app.pointerAt(event.clientX, event.clientY);
-  });
-  stage.addEventListener("pointerleave", () => {
-    game.pointer = null;
-  });
-  stage.addEventListener("contextmenu", (event) => event.preventDefault());
-  stage.addEventListener("mousedown", (event) => {
-    event.preventDefault();
-    sound.unlock();
-    game.pointer = app.pointerAt(event.clientX, event.clientY);
-    if (!game.started) {
-      game.started = true;
-      return;
-    }
-    if (game.dex.open) return;
+
+  // 왼쪽(탭): 생물을 누르면 그 종이 좋아하는 먹이, 빈 곳이면 기본 가루 먹이.
+  // 오른쪽(길게 누르기): 생물을 누르면 교감, 빈 곳이면 유리 두드리기(화면 일렁임).
+  const act = (button: 0 | 2) => {
+    if (!game.pointer) return;
     const [x, y] = game.pointer;
     const target = app.actorAt(x, y);
-    // 왼쪽: 생물을 누르면 그 종이 좋아하는 먹이, 빈 곳이면 기본 가루 먹이.
-    // 오른쪽: 생물을 누르면 교감, 빈 곳이면 유리 두드리기(화면 일렁임).
-    if (event.button === 0) {
+    if (button === 0) {
       if (target) game.feedActor(target);
       else game.feed(x, y);
       sound.feed(x);
-    } else if (event.button === 2) {
+    } else {
       if (target) game.react(target);
       else {
         game.tap(x, y);
         sound.tap(x);
       }
     }
+  };
+  // 터치 한 번의 상태: 누른 자리, 길게 누르기 타이머, 길게 눌렀는지, 끌었는지.
+  let press: { id: number; x: number; y: number; timer: number; long: boolean; moved: boolean } | null = null;
+  let forget = 0;
+  const release = () => {
+    if (press) window.clearTimeout(press.timer);
+    press = null;
+  };
+  stage.addEventListener("pointermove", (event) => {
+    game.pointer = app.pointerAt(event.clientX, event.clientY);
+    if (press && press.id === event.pointerId && Math.hypot(event.clientX - press.x, event.clientY - press.y) > DRAG_SLOP) {
+      window.clearTimeout(press.timer);
+      press.moved = true;
+    }
   });
+  stage.addEventListener("pointerleave", (event) => {
+    if (event.pointerType === "mouse") game.pointer = null;
+  });
+  stage.addEventListener("contextmenu", (event) => event.preventDefault());
+  stage.addEventListener("pointerdown", (event) => {
+    // 터치의 뒤따르는 호환 마우스 이벤트와 글자 선택·확대를 막는다.
+    event.preventDefault();
+    sound.unlock();
+    if (event.pointerType !== "mouse") game.look.touch = true;
+    window.clearTimeout(forget);
+    game.pointer = app.pointerAt(event.clientX, event.clientY);
+    if (!game.started) {
+      game.started = true;
+      return;
+    }
+    if (game.dex.open) {
+      // 도감: 화면 양옆 3분의 1을 누르면 쪽을 넘기고, 가운데를 누르면 닫는다(마우스 클릭도 같다).
+      const third = event.clientX / Math.max(1, stage.clientWidth);
+      if (third < 1 / 3) game.dex.page = Math.max(0, game.dex.page - 1);
+      else if (third > 2 / 3) game.dex.page += 1;
+      else game.dex.open = false;
+      return;
+    }
+    if (event.pointerType === "mouse") {
+      if (event.button === 0) act(0);
+      else if (event.button === 2) act(2);
+      return;
+    }
+    release();
+    const id = event.pointerId;
+    press = {
+      id,
+      x: event.clientX,
+      y: event.clientY,
+      long: false,
+      moved: false,
+      timer: window.setTimeout(() => {
+        if (press && press.id === id && !press.moved) {
+          press.long = true;
+          act(2);
+          navigator.vibrate?.(12);
+        }
+      }, LONG_PRESS),
+    };
+  });
+  const lift = (event: PointerEvent, cancelled: boolean) => {
+    if (!press || press.id !== event.pointerId) return;
+    if (!cancelled && !press.long && !press.moved) act(0);
+    release();
+    // 탭한 생물의 테두리와 이름을 잠깐 보여 준 뒤 지운다.
+    forget = window.setTimeout(() => {
+      game.pointer = null;
+    }, 1600);
+  };
+  stage.addEventListener("pointerup", (event) => lift(event, false));
+  stage.addEventListener("pointercancel", (event) => lift(event, true));
 }
 
 /// 캡처 확인용으로 종 하나를 포인터 자리에 오른쪽을 보게 부르고 id를 돌려준다.
@@ -252,7 +401,8 @@ function castAtPointer(game: Aquarium, id: string): number | null {
   actor.y = grounded ? 255 + 2 - species.frameH * 0.5 : py;
   actor.targetY = actor.y;
   actor.facing = 1;
-  actor.depth = 1;
+  // 확인용으로 먼 층(depth=0)에 부를 수 있다.
+  actor.depth = params.get("depth") === "0" ? 0 : 1;
   actor.age = 1.5;
   actor.emerging = false;
   actor.lifespan = 120;
@@ -413,6 +563,9 @@ async function main(): Promise<void> {
   const seed = params.has("seed") ? numberParam("seed", 7) : capture ? 7 : randomSeed();
   const sceneId = pickScene(params.get("scene") ?? (capture ? "reef" : null), Math.random);
   const layoutSeed = params.has("layout") ? numberParam("layout", 1) : capture ? seed : randomSeed();
+  // 처음 생물·플랑크톤 자리도 보이는 범위를 따르도록 게임을 만들기 전에 창 크기로 정한다.
+  const firstSize: [number, number] = capture ? (pairParam("size", "x") ?? [SCREEN_WIDTH, SCREEN_HEIGHT]) : [Math.max(1, window.innerWidth), Math.max(1, window.innerHeight)];
+  setVisibleRange(...visibleRange(firstSize, capture && params.get("integer") === "1"));
   const game = new Aquarium(loadAll(), seed, capture ? params.get("started") === "1" : false);
   if (capture) {
     game.flashlight = params.get("flashlight") === "1";

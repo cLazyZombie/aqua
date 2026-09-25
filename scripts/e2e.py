@@ -112,6 +112,9 @@ def check_ambient() -> None:
     assert any(c["id"] == "octopus" and c["mood"] == "dream" for c in dream["active_creatures"])
     # 포인터를 기포 줄기에 두면 기포가 톡 터진다. 게가 걸으면 모래에 발자국이 남는다.
     assert load("ambient-pop")[1]["popped"] > 0
+    # 먼 층 생물은 불투명하게 그리고 물색 안개로 가라앉힌다(뒤 켈프가 몸을 뚫고 보이지 않게). 캡처는 눈으로 확인한다.
+    _, far = load("far-shark")
+    assert any(c["id"] == "leopard-shark" and c["depth"] == 0 for c in far["active_creatures"]), "far shark missing"
     assert load("whale-dusk")[1]["prints"] > 0
 
 
@@ -258,12 +261,19 @@ def main() -> None:
     far = ImageStat.Stat(rings.crop((ax - 40, ay + 120, ax + 60, ay + 200)).convert("L")).mean[0]
     assert halo > far + 15, f"night glow rings too faint: {halo:.1f} vs {far:.1f}"
     # 창 크기와 관계없이 월드가 창을 덮는다(검은 여백 없음). 정수배 모드도 같다.
-    for name in ("size-1280x720", "size-1280x720-integer", "size-1000x800"):
+    for name in ("size-1280x720", "size-1280x720-integer", "size-1000x800", "size-phone", "size-phone-title", "size-phone-kelp-night"):
         image, _ = load(name)
         w, h = image.size
         for box in ((0, h // 2 - 60, 60, h // 2 + 60), (w - 60, h // 2 - 60, w, h // 2 + 60),
                     (w // 2 - 80, 0, w // 2 + 80, 30), (w // 2 - 80, h - 30, w // 2 + 80, h)):
             assert max(ImageStat.Stat(image.crop(box)).mean) > 30, f"{name}: black bar at {box}"
+    # 휴대폰 가로 화면(588×270 월드를 2배로): 월드 픽셀 격자가 그대로이고, 무대 양옆 여백에도 배경이 그려진다.
+    phone, _ = load("size-phone")
+    assert phone.size == (1176, 540)
+    halves = phone.resize((588, 270), Image.Resampling.NEAREST).resize((1176, 540), Image.Resampling.NEAREST)
+    assert diff(phone, halves) < 0.5, "phone view should keep the 2x2 world pixel grid"
+    for box in ((0, 0, 108, 540), (1068, 0, 1176, 540)):
+        assert ImageStat.Stat(phone.crop(box)).stddev[1] > 12, f"phone margin {box} looks empty"
     # 사건: 보물상자가 떨어지고, 상어가 지나가도 아무도 사라지지 않으며, 두드린 자리가 일렁이고, 바구니가 과자를 뿌린다.
     _, chest = load("event-chest")
     assert chest["debris"] == 1

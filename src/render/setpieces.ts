@@ -6,7 +6,7 @@ import { glowDot } from "./creatures";
 import type { SceneAssets } from "./assets";
 import type { Frame, Sprite } from "./draw";
 import { cellUv, fullUv, hash, pixelRect, rgb, rgba, roundHalfAway, solids, textured } from "./draw";
-import { type Aquarium, FLOOR_Y, WIDTH } from "./simapi";
+import { type Aquarium, FLOOR_Y, VIEW_LEFT, VIEW_RIGHT, VIEW_WIDTH } from "./simapi";
 
 const TAU = Math.PI * 2;
 
@@ -154,7 +154,7 @@ export function appendSetPieces(frame: Frame, game: Aquarium, assets: SceneAsset
     frame.layers.push(textured("sun-curtain", assets.cone, "additive", shafts));
     for (let fleck = 0; fleck < 26; fleck++) {
       const seed = fleck * 2.9 + 300;
-      const x = hash(seed) * WIDTH + Math.sin(game.time * 0.5 + seed) * 6;
+      const x = VIEW_LEFT + hash(seed) * VIEW_WIDTH + Math.sin(game.time * 0.5 + seed) * 6;
       const y = FLOOR_Y - 3 + hash(seed + 1) * 9;
       const flicker = Math.pow(Math.sin(game.time * (1.2 + hash(seed + 2)) + seed) * 0.5 + 0.5, 2);
       const a = set.sunflecks * flicker * 0.34;
@@ -177,7 +177,7 @@ export function appendSetPieces(frame: Frame, game: Aquarium, assets: SceneAsset
   }
   // 빙하 바다 오로라: 얼음판 너머로 초록·보라 빛 커튼이 느리게 일렁인다. 위는 진하고 아래로 세 단계 옅어진다.
   if (set.aurora > 0.01) {
-    for (let column = 0; column < WIDTH; column += 2) {
+    for (let column = VIEW_LEFT; column < VIEW_RIGHT; column += 2) {
       const broad = 0.5 + 0.5 * Math.sin(column * 0.023 + game.time * 0.4) * Math.sin(column * 0.009 - game.time * 0.17 + 1.3);
       // 가는 세로 결을 얹어 커튼 주름처럼 보이게 한다.
       const wave = broad * (0.72 + 0.28 * Math.sin(column * 0.19 + game.time * 1.1));

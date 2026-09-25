@@ -55,16 +55,27 @@ export function bodyOf(game: Aquarium, assets: SceneAssets, actor: Actor, color:
 
 /// 먼 층 생물. 조명 없이 물빛으로 가라앉힌 색 시트를 쓴다.
 export function appendFar(frame: Frame, game: Aquarium, assets: SceneAssets): void {
+  // 먼 층 생물은 몸을 불투명하게 그려 뒤 배경이 비치지 않게 하고, 거리감은 그 줄의 물색을 덧칠해(안개) 낸다.
+  // 예전에는 몸을 반투명(0.72)으로 그려 뒤 켈프·바위가 몸을 뚫고 보였다.
   const batches = new Map<number, Sprite[]>();
+  const fogs = new Map<number, Sprite[]>();
+  const water = assets.scene.water;
   for (const actor of game.actors) {
     if (actor.depth !== 0) continue;
-    const color = rgba(110, 160, 205, 0.72 * actor.alpha());
-    push(batches, actor.species, bodyOf(game, assets, actor, color, -80).sprite);
+    const body = bodyOf(game, assets, actor, rgba(110, 160, 205, actor.alpha()), -80).sprite;
+    push(batches, actor.species, body);
+    const fog = water[Math.min(water.length - 1, Math.max(0, Math.round(actor.y)))];
+    push(fogs, actor.species, { ...body, color: rgba(fog[0], fog[1], fog[2], FAR_FOG * actor.alpha()), order: -79.9 });
   }
   for (const species of [...batches.keys()].sort((a, b) => a - b)) {
-    frame.layers.push(textured(`far-${species}`, assets.species[species].texture, "alpha", batches.get(species)!));
+    const texture = assets.species[species].texture;
+    frame.layers.push(textured(`far-${species}`, texture, "alpha", batches.get(species)!));
+    frame.layers.push({ id: `far-fog-${species}`, material: { kind: "silhouette", texture }, blend: "alpha", sprites: fogs.get(species)! });
   }
 }
+
+/// 먼 층 생물에 덧칠하는 물색 안개의 세기다.
+const FAR_FOG = 0.3;
 
 function push(map: Map<number, Sprite[]>, key: number, sprite: Sprite): void {
   const list = map.get(key);

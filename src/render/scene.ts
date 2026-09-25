@@ -10,7 +10,7 @@ import * as events from "./events";
 import * as interact from "./interact";
 import * as setpieces from "./setpieces";
 import * as overlay from "./overlay";
-import { type Aquarium, HEIGHT, WIDTH } from "./simapi";
+import { type Aquarium, HEIGHT, VIEW_WIDTH, WIDTH } from "./simapi";
 
 /// 한 frame의 카메라와 패럴랙스 기준이다.
 export class View {
@@ -32,10 +32,17 @@ export class View {
   }
 }
 
-/// 창을 월드(480x270)로 덮는 배율이다. 넘치는 쪽은 잘라 낸다. `integer`면 정수배로 올린다.
+/// 창을 보이는 월드(588x270, 휴대폰 가로 화면 비율)로 덮는 배율이다. 넘치는 쪽은 잘라 낸다(16:9 창은 양옆 여백이 잘린다).
+/// `integer`면 정수배로 올린다.
 export function pixelZoom(viewport: [number, number], integer: boolean): number {
-  const cover = Math.max(0.1, Math.max(viewport[0] / WIDTH, viewport[1] / HEIGHT));
+  const cover = Math.max(0.1, Math.max(viewport[0] / VIEW_WIDTH, viewport[1] / HEIGHT));
   return integer ? Math.ceil(cover) : cover;
+}
+
+/// 이 창에 보이는 월드 가로 범위다(무대 가운데 기준). 16:9 창은 0..480, 휴대폰 가로 화면은 약 -54..534다.
+export function visibleRange(viewport: [number, number], integer: boolean): [number, number] {
+  const half = viewport[0] / (2 * pixelZoom(viewport, integer));
+  return [WIDTH / 2 - half, WIDTH / 2 + half];
 }
 
 /// 창의 논리 좌표를 현재 카메라 기준 월드 좌표로 바꾼다.

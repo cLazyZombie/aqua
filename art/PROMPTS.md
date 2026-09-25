@@ -326,3 +326,19 @@ A pixel art foreground prop strip for a 2D side-view aquarium game, 16-bit SNES 
 - `duck`: a classic yellow rubber duck bath toy with an orange beak and a small black dot eye, floating upright, strict side view facing RIGHT.
 
 해녀의 테왁(주황 부표)과 줄, 흰동가리 알, 문어의 조개껍데기, 오로라·불꽃·햇살 커튼 같은 빛은 그림 없이 코드로 그린다(`src/render/setpieces.ts`).
+
+## 13차: 헤엄 자세로 다시 그리기
+
+바다사자 무리가 앉거나 누운 뭍 자세여서 헤엄 자세로 다시 그렸다(생물 공통 스타일 포함). 공통 뒷말: `It is NOT sitting, NOT standing, NOT lying down and NOT resting: there is no ground, no rock and no shore, it is swimming in open water. Strict side view profile, head and face pointing to the RIGHT edge of the image, hind flippers and tail on the LEFT, body horizontal and stretched out.`
+
+- `california-sea-lion`: a cute California sea lion SWIMMING underwater (sleek brown streamlined torpedo-shaped body, small head with tiny ear flaps and whiskers stretched forward, long front flippers held out and swept back like wings, hind flippers pressed together trailing straight behind).
+- `steller-sea-lion`: a cute Steller sea lion SWIMMING underwater (large tan-golden streamlined body with a thick neck and a little mane, head stretched forward, broad front flippers held out and swept back, hind flippers pressed together trailing straight behind).
+- `walrus`: a cute walrus SWIMMING underwater (big plump brown wrinkly body stretched out horizontally, long white tusks pointing down and forward, bushy whiskers, front flippers paddling at its sides, hind flippers pressed together trailing straight behind).
+- `harbor-seal`: a cute harbor seal SWIMMING underwater (plump spotted grey streamlined body stretched out horizontally, round head with big dark eyes and whiskers, small front flippers tucked against the belly, hind flippers pressed together trailing behind like a fish tail).
+- `marine-iguana`: a cute marine iguana SWIMMING underwater (black-grey lizard with a row of small spikes along its back, body stretched out horizontally, all four legs folded back flat against its sides, long flattened tail waving behind to push it forward). It is NOT walking: its legs do not touch any ground.
+
+날치는 원래 그림(날개처럼 편 가슴지느러미)을 점프 자세(`flying-fish-pose.png`)로 옮기고, 물속 기본 그림은 원래 그림을 `codex exec -i <원본> -- "<프롬프트>"`로 고쳐 만들었다:
+
+```text
+Use the built-in image_gen tool exactly once to EDIT the attached image. Keep the exact same flying fish: the same retro 16-bit SNES-era pixel art style with chunky square pixels of identical size, the same blue and silver colors, the same clean dark outline, the same head, big eye, body, forked tail, size and framing, and a fully transparent background. Only change its two huge wing-like pectoral fins: the fish is now SWIMMING UNDERWATER, so both wing fins are FOLDED back tightly along the sides of its body, lying flat against the body and pointing toward the tail, with only a slim streamlined edge of the folded fin visible along the middle of the body. No fin sticks up above the back or down below the belly except the small normal dorsal and pelvic fins. Strict side view profile, head pointing to the RIGHT edge, tail on the LEFT, body horizontal.
+```

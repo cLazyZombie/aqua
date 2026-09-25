@@ -1,44 +1,59 @@
 // 패럴랙스 층, 수면과 햇빛, 빛줄기, 산호·해초, 기포.
 
+import type * as THREE from "three";
+
 import { cloudCover } from "./ambient";
 import type { SceneAssets } from "./assets";
-import type { Frame, Sprite } from "./draw";
+import type { Frame, Layer, Sprite } from "./draw";
 import { WHITE, cellUv, fullUv, hash, mix, pixelRect, pixelSprite, rgb, rgba, roundHalfAway, solids, textured } from "./draw";
 import type { View } from "./scene";
-import { type Aquarium, FLOOR_Y, HEIGHT, SURFACE_Y, WIDTH, faceTravel, grounded, ventBubbles } from "./simapi";
+import { type Aquarium, FLOOR_Y, HEIGHT, SURFACE_Y, VIEW_LEFT, VIEW_WIDTH, WIDTH, faceTravel, grounded, ventBubbles } from "./simapi";
 
 const FAR = 0.2;
 const DEEP = 0.12;
 const KELP_WALL = 0.42;
 const MID = 0.55;
 
+/// 배경 층 물속 일렁임 폭(텍셀)이다. 멀수록 물을 많이 사이에 두므로 크게 흔든다.
+const WAVE = { far: 1.6, deep: 1.3, back: 1.0, mid: 0.8 };
+
+/// 폭 `width`인 배경 층을 무대 가운데에 맞춘 왼쪽 x다. 층은 휴대폰 가로 화면의 보이는 월드(588)보다 조금 넓게 굽는다.
+function centered(width: number): number {
+  return WIDTH / 2 - width / 2;
+}
+
+function wavy(id: string, texture: THREE.Texture, amplitude: number, sprites: Sprite[]): Layer {
+  return { id, material: { kind: "wavy", texture, amplitude }, blend: "alpha", sprites };
+}
+
 export function appendBack(frame: Frame, view: View, game: Aquarium, assets: SceneAssets): void {
   const far = view.shift(FAR);
   const scene = assets.scene;
-  frame.layers.push(textured("far", scene.far, "alpha", [pixelRect(-10 + far[0], -6 + far[1], 500, 282, fullUv(), WHITE, -100)]));
+  // 생물 뒤 배경 층은 물속 일렁임으로 조금씩 밀어 그린다(먼 층일수록 크게). 생물·소품·바닥은 흔들지 않는다.
+  frame.layers.push(wavy("far", scene.far, WAVE.far, [pixelRect(centered(610) + far[0], -6 + far[1], 610, 282, fullUv(), WHITE, -100)]));
   const light = 0.25 + 0.75 * game.daylight();
   const sky = mix([230, 255, 255], [255, 178, 110], game.twilight());
   let surfaceFrame = Math.trunc(game.time * 7) % 8;
   const surface: Sprite[] = [];
   for (let tile = 0; tile < 3; tile++) {
     surface.push(
-      pixelRect(-10 + far[0] + tile * 240, -6 + far[1], 240, 30, cellUv(surfaceFrame, 8, false), rgb(sky, 0.6 * light + 0.25 * game.twilight()), -99),
+      pixelRect(VIEW_LEFT - 10 + far[0] + tile * 240, -6 + far[1], 240, 30, cellUv(surfaceFrame, 8, false), rgb(sky, 0.6 * light + 0.25 * game.twilight()), -99),
     );
   }
   frame.layers.push(textured("surface", assets.surface, "additive", surface));
   appendSun(frame, game, far);
   const deep = view.shift(DEEP);
-  frame.layers.push(textured("deep-ridge", scene.deep, "alpha", [pixelRect(-10 + deep[0], 80 + deep[1], 500, 170, fullUv(), scene.style.deep, -98)]));
+  frame.layers.push(wavy("deep-ridge", scene.deep, WAVE.deep, [pixelRect(centered(610) + deep[0], 80 + deep[1], 610, 170, fullUv(), scene.style.deep, -98)]));
   const wall = view.shift(KELP_WALL);
   frame.layers.push(
-    textured("back-wall", scene.back, "alpha", [pixelRect(-16 + wall[0], FLOOR_Y - 224 + wall[1], 512, 230, fullUv(), scene.style.back, -95)]),
+    wavy("back-wall", scene.back, WAVE.back, [pixelRect(centered(622) + wall[0], FLOOR_Y - 224 + wall[1], 622, 230, fullUv(), scene.style.back, -95)]),
   );
   const mid = view.shift(MID);
-  frame.layers.push(textured("mid", scene.mid, "alpha", [pixelRect(-16 + mid[0], -9 + mid[1], 512, 288, fullUv(), scene.style.mid, -94)]));
-  frame.layers.push(textured("floor", scene.floor, "alpha", [pixelRect(-16, HEIGHT - 48, 512, 48, fullUv(), WHITE, -90)]));
+  frame.layers.push(wavy("mid", scene.mid, WAVE.mid, [pixelRect(centered(622) + mid[0], -9 + mid[1], 622, 288, fullUv(), scene.style.mid, -94)]));
+  frame.layers.push(textured("floor", scene.floor, "alpha", [pixelRect(centered(622), HEIGHT - 48, 622, 48, fullUv(), WHITE, -90)]));
   surfaceFrame = Math.trunc(game.time * 5) % 8;
   frame.layers.push(
-    textured("caustics", scene.caustics, "additive", [pixelRect(0, HEIGHT - 48, WIDTH, 48, cellUv(surfaceFrame, 8, false), rgba(255, 255, 230, 0.5 * light), -89)]),
+    textured("caustics", scene.caustics, "additive", [pixelRect(VIEW_LEFT, HEIGHT - 48, VIEW_WIDTH, 48, cellUv(surfaceFrame, 8, false), rgba(255, 255, 230, 0.5 * light), -89)]),
   );
 }
 
@@ -226,7 +241,7 @@ function pushOf(game: Aquarium, px: number, top: number, bottom: number, width: 
 export function appendBackProps(frame: Frame, view: View, game: Aquarium, assets: SceneAssets): void {
   appendProps(frame, game, assets, false);
   const screen = view.shift(0);
-  frame.layers.push(textured("depth-haze", assets.haze, "alpha", [pixelRect(screen[0], screen[1], WIDTH, HEIGHT, fullUv(), rgba(255, 255, 255, 0.3), -55)]));
+  frame.layers.push(textured("depth-haze", assets.haze, "alpha", [pixelRect(screen[0] + VIEW_LEFT, screen[1], VIEW_WIDTH, HEIGHT, fullUv(), rgba(255, 255, 255, 0.3), -55)]));
 }
 
 /// 수면에서 비스듬히 내려오는 빛줄기.
@@ -235,7 +250,8 @@ export function appendRays(frame: Frame, game: Aquarium, assets: SceneAssets): v
   const moon = game.nightStrength();
   const flash = game.weather.flash;
   const rays: Sprite[] = [];
-  for (let index = 0; index < 6; index++) {
+  // 무대 위 6줄에 휴대폰 여백 양쪽 한 줄씩을 더한다(16:9 창에서는 여백 줄이 잘린다).
+  for (let index = -1; index < 7; index++) {
     const seed = index;
     const sway = Math.sin(game.time * 0.11 + seed * 1.7) * 10;
     const x = 12 + seed * 78 + sway;
@@ -246,7 +262,7 @@ export function appendRays(frame: Frame, game: Aquarium, assets: SceneAssets): v
     let warm = mix([255, 250, 215], [255, 168, 96], game.twilight());
     warm = mix(warm, [255, 205, 90], game.golden);
     const tint = mix(warm, [150, 190, 255], moon);
-    rays.push(pixelRect(x, -6, 56, 250, cellUv(index % 3, 3, false), rgb(tint, strength), -50));
+    rays.push(pixelRect(x, -6, 56, 250, cellUv((index + 3) % 3, 3, false), rgb(tint, strength), -50));
   }
   frame.layers.push(textured("light-rays", assets.rays, "additive", rays));
 }

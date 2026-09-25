@@ -3,7 +3,7 @@
 // 생물을 없애거나 해치지 않는다. 숨는 장면은 굴·모래 속으로 들어갔다 다시 나온다.
 
 import type { Aquarium } from "./aquarium";
-import { FLOOR_Y, TAU, WIDTH } from "./constants";
+import { FLOOR_Y, TAU, WIDTH, offstage, visible } from "./constants";
 import {
   type Active,
   actorById,
@@ -390,7 +390,7 @@ export function startExtra(game: Aquarium, active: Active): void {
         if (index === null) break;
         game.spawnSchool(index, false);
         const school = game.schools[game.schools.length - 1];
-        const shift = (heading > 0 ? -40 : WIDTH + 40) - school.x;
+        const shift = offstage(heading > 0 ? -40 : WIDTH + 40) - school.x;
         school.heading = heading;
         school.x += shift;
         school.y = y;
@@ -480,7 +480,7 @@ export function startExtra(game: Aquarium, active: Active): void {
     case "DuckFlotilla": {
       const facing = game.random() < 0.5 ? 1 : -1;
       set.floaters = [0, 1, 2, 3, 4].map((rank) => ({
-        x: (facing > 0 ? -20 : WIDTH + 20) - facing * rank * 26,
+        x: offstage(facing > 0 ? -20 : WIDTH + 20) - facing * rank * 26,
         facing,
         speed: 10,
         phase: game.random() * TAU,
@@ -957,7 +957,7 @@ export function stepExtra(game: Aquarium, active: Active, dt: number): boolean {
         const duck = set.floaters[Math.floor(game.random() * set.floaters.length)];
         if (duck) game.particles.push(new Particle("Ring", duck.x, 20, 0, 0, 0.9, 0));
       }
-      return set.floaters.some((duck) => duck.x > -40 && duck.x < WIDTH + 40) || age < 4;
+      return set.floaters.some((duck) => duck.x > visible.left - 40 && duck.x < visible.right + 40) || age < 4;
     case "HaenyeoDive": {
       const slot = slotOf(game, active, 0);
       if (slot === null) return false;
