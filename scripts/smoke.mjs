@@ -80,6 +80,24 @@ try {
   await page.keyboard.press("KeyE");
   await page.waitForTimeout(1500);
   await page.screenshot({ path: resolve(OUTPUT, "smoke-live.png") });
+  // 소리: 첫 입력 뒤 소리 장치가 돌고, 시간대 곡·수면 찰랑임·기포 소리를 받아 튼다. M으로 끄고 다시 켠다.
+  const playing = await page
+    .waitForFunction(() => {
+      const s = window.__aquaSound?.state();
+      return s && s.context === "running" && s.music !== null && s.lapping && s.bubbles ? s : null;
+    }, null, { timeout: 30000 })
+    .then((handle) => handle.jsonValue())
+    .catch(async () => page.evaluate(() => window.__aquaSound?.state() ?? null));
+  console.log(`sound: ${JSON.stringify(playing)}`);
+  if (!playing || playing.context !== "running" || playing.music === null || !playing.lapping || !playing.bubbles) errors.push(`sound did not start: ${JSON.stringify(playing)}`);
+  await page.keyboard.press("KeyM");
+  await page.waitForTimeout(700);
+  const muted = await page.evaluate(() => ({ state: window.__aquaSound?.state(), toast: document.getElementById("toast")?.textContent }));
+  if (muted.state?.context !== "suspended" || muted.toast !== "소리 끔") errors.push(`mute failed: ${JSON.stringify(muted)}`);
+  await page.keyboard.press("KeyM");
+  await page.waitForTimeout(300);
+  const unmuted = await page.evaluate(() => ({ state: window.__aquaSound?.state(), toast: document.getElementById("toast")?.textContent }));
+  if (unmuted.state?.context !== "running" || unmuted.toast !== "소리 켬") errors.push(`unmute failed: ${JSON.stringify(unmuted)}`);
   await page.setViewportSize({ width: 800, height: 800 });
   await page.waitForTimeout(600);
   await page.screenshot({ path: resolve(OUTPUT, "smoke-resized.png") });

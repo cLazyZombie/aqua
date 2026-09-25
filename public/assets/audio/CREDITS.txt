@@ -1,0 +1,43 @@
+Aqua — music and sounds
+=======================
+
+These files are not covered by Aqua's MIT license. Each keeps its own license.
+All files were re-encoded to MP3 and loudness-normalized (scripts/build_audio.py).
+
+Night music (CC BY 3.0 — attribution required)
+----------------------------------------------
+starlight.mp3
+  "Starlight" (Star Light, looping) by Eric Matyas, Soundimage.org
+  Source:  https://opengameart.org/content/star-light
+  License: CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/
+
+gentle-lullaby.mp3
+  "Gentle Lullaby Loop" by Frances Calceta
+  Source:  https://opengameart.org/content/gentle-lullaby-loop
+  License: CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/
+
+Day music (CC0 1.0 — credit given as thanks)
+--------------------------------------------
+underwater-theme-ii.mp3
+  "Underwater Theme II" — Music by Cleyton Kauffman
+  Source:  https://opengameart.org/content/underwater-theme-ii
+underwater-bells.mp3
+  "Underwater" — Music by Cleyton Kauffman
+  Source:  https://opengameart.org/content/underwater-theme
+aquaria.mp3
+  "Aquaria" by cynicmusic (The Cynic Project, pixelsphere.org)
+  Source:  https://opengameart.org/content/aquaria
+ice-cave-lofi.mp3
+  "8 bit lofi - Ice Cave" by TAD (dual-licensed CC BY 4.0 / CC0; used under CC0)
+  Source:  https://opengameart.org/content/8-bit-lofi-ice-cave
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/
+
+Underwater sounds (CC0 1.0, Freesound)
+--------------------------------------
+underwater-bed.mp3
+  "Underwater [Loop] AMB.wav" by DCSFX — https://freesound.org/people/DCSFX/sounds/366159/
+surface-lapping.mp3
+  "bubble lapping wave on concrete pier" by bruno.auzet — https://freesound.org/people/bruno.auzet/sounds/838025/
+bubbles.mp3
+  "stereo bubbles (straw)" by Yuval — https://freesound.org/people/Yuval/sounds/192351/
+License: CC0 1.0 — https://creativecommons.org/publicdomain/zero/1.0/

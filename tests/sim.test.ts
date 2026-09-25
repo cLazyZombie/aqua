@@ -28,6 +28,11 @@ const NIGHT_EVENTS = new Set([
   "coral-spawn",
   "giant-squid",
   "submarine",
+  "manta-campfire",
+  "pearl-night",
+  "rune-glow",
+  "aurora",
+  "fireworks",
 ]);
 
 describe("aquarium", () => {

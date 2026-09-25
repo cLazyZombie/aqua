@@ -309,3 +309,20 @@ A pixel art SEABED ground strip for a 2D side-view underwater aquarium game, 16-
 A pixel art foreground prop strip for a 2D side-view aquarium game, 16-bit SNES era style, chunky LOW-RESOLUTION pixels (every pixel a crisp large square block), bold readable shapes, cel shading, lighter rim light on top edges, no anti-aliasing, no dithering. vivid saturated colors. Content: a row of EIGHT separate props standing on an invisible flat baseline across the bottom third of the image, spaced apart with wide empty gaps between them, none touching another. The props: a white strawberry soft coral tree, a tall pink sea anemone, a big grey boulder with two orange sea stars, a chunk of blue-white ice resting on the ground, a tall orange sea pen, a yellow barrel sponge, a red feather star on a rock, a clump of red kelp. Background: fully transparent background (alpha) everywhere above and between the props. No water, no fish, no creatures, no text, no sand floor, no shadows.
 ```
 
+
+## 12차: 사건 2부·해녀·인어공주
+
+방문자(`art/species/`, 생물 공통 스타일 포함):
+
+- `adelie-penguin`: an Adélie penguin swimming fast underwater (sleek black back and head, clean white belly, white ring around the eye, short black beak, two flippers swept back, small pink feet trailing behind, streamlined torpedo body). Strict side view profile, head pointing to the RIGHT edge of the image, tail and feet on the LEFT, body horizontal.
+- `haenyeo`: a cheerful Korean haenyeo (traditional female free diver) swimming underwater: black rubber diving suit covering the body, round old-fashioned diving goggles on her face, a black hood cap, a mesh net bag (mangsari) hanging at her hip, bare hands, legs stretched behind with small black fins. Friendly and cute chibi proportions. Strict side view profile, head pointing to the RIGHT edge of the image, legs on the LEFT, body horizontal.
+- `mermaid`: an original friendly mermaid girl swimming (long lavender hair in a loose braid with a small pearl hairpin, a simple teal top made of fish scales, a coral-pink fish tail with golden fins, a gentle smile). Original character design for a cozy aquarium game. Strict side view profile, head pointing to the RIGHT edge of the image, tail on the LEFT, body horizontal.
+
+인어공주는 처음에 붉은 머리와 보라 조개 상의로 요청했더니 기존 작품 캐릭터와 닮았다는 이유로 생성이 막혔다. 라벤더 땋은 머리·진주 핀·청록 비늘 상의·산호빛 꼬리의 독창적인 디자인으로 바꿔 만들었다.
+
+물건(`art/events/`, 물건 공통 스타일 포함):
+
+- `shell`: an EMPTY spiral sea snail shell (cream with orange-brown stripes and a pearly pink opening) lying on its side on the ground, the round opening facing the viewer and a little to the right, nothing inside the shell, no creature, no eyes.
+- `duck`: a classic yellow rubber duck bath toy with an orange beak and a small black dot eye, floating upright, strict side view facing RIGHT.
+
+해녀의 테왁(주황 부표)과 줄, 흰동가리 알, 문어의 조개껍데기, 오로라·불꽃·햇살 커튼 같은 빛은 그림 없이 코드로 그린다(`src/render/setpieces.ts`).

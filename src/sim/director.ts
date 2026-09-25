@@ -7,6 +7,7 @@ import { bigBody, faceTravel, grounded, type Species } from "./catalog";
 import { FLOOR_Y, HEIGHT, TAU, TURN_SECONDS, WIDTH } from "./constants";
 import { Particle, type ParticleKind, Tentacle } from "./life";
 import { f32, pickIndex, retain, signum } from "./num";
+import { EXTRA_INFO, EXTRA_KINDS, extraPool, extraRarity, extraSceneOk, extraWhen, finishExtra, isExtra, startExtra, stepExtra } from "./vignettes";
 
 /** 생물에 붙는 짧은 연출 동작이다. 붙어 있는 동안 평소 헤엄 규칙 대신 이 동작을 따른다. */
 export type Script =
@@ -17,7 +18,7 @@ export type Script =
   /** 다른 생물(`leader` id)의 옆을 일정 간격으로 따라간다. */
   | { kind: "Follow"; leader: number; dx: number; dy: number };
 
-function goto(x: number, y: number, speed: number): Script {
+export function goto(x: number, y: number, speed: number): Script {
   return { kind: "Goto", x, y, speed };
 }
 
@@ -61,6 +62,8 @@ export const EVENT_KINDS = [
   "HideAndSeek",
   "PufferPanic",
   "CleaningStation",
+  // 사건 2부(짧은 장면)는 vignettes.ts에 있다.
+  ...EXTRA_KINDS,
 ] as const;
 
 export type EventKind = (typeof EVENT_KINDS)[number];
@@ -71,6 +74,7 @@ export type Rarity = "Common" | "Rare" | "Legendary";
 type When = "Any" | "Day" | "Night" | "Dawn";
 
 const EVENT_INFO: Record<EventKind, { id: string; title: string; duration: number }> = {
+  ...EXTRA_INFO,
   SharkPatrol: { id: "shark-patrol", title: "상어의 순찰", duration: 16 },
   BubbleNet: { id: "bubble-net", title: "돌고래의 기포 그물", duration: 16 },
   AnglerLantern: { id: "angler-lantern", title: "초롱아귀의 등불", duration: 22 },
@@ -127,6 +131,7 @@ export function eventTitle(kind: EventKind): string {
 }
 
 export function eventRarity(kind: EventKind): Rarity {
+  if (isExtra(kind)) return extraRarity(kind);
   switch (kind) {
     case "WhaleShark":
     case "Oarfish":
@@ -153,6 +158,7 @@ export function eventRarity(kind: EventKind): Rarity {
 }
 
 function eventWhen(kind: EventKind): When {
+  if (isExtra(kind)) return extraWhen(kind);
   switch (kind) {
     case "SharkPatrol":
     case "BubbleNet":
@@ -236,7 +242,7 @@ export class Director {
 }
 
 /** 가라앉는 물건이다. */
-export type DebrisKind = "Anchor" | "Chest" | "Bottle";
+export type DebrisKind = "Anchor" | "Chest" | "Bottle" | "Ice";
 
 export class Debris {
   kind: DebrisKind;
@@ -392,7 +398,8 @@ function eventAllowed(game: Aquarium, kind: EventKind, ignoreCooldown: boolean):
     eventRarity(kind) !== "Legendary" ||
     ignoreCooldown ||
     game.time - game.director.lastLegendary >= LEGENDARY_GAP;
-  let needs = true;
+  // 컨셉 전용 사건(오로라·룬 등)은 그 배경일 때만 일어난다.
+  let needs = !isExtra(kind) || extraSceneOk(game, kind);
   if (kind === "SharkPatrol" || kind === "BubbleNet") {
     needs = game.schools.length > 0;
   } else if (kind === "WhaleSong") {
@@ -457,7 +464,7 @@ export function actorById(game: Aquarium, id: number): number | null {
 }
 
 /** 종 id의 생물 하나를 지정 위치에 등장시키고 id를 돌려준다. */
-function cast(game: Aquarium, species: string, x: number, y: number, facing: number): number | null {
+export function cast(game: Aquarium, species: string, x: number, y: number, facing: number): number | null {
   const index = game.indexOf(species);
   if (index === null) return null;
   const slot = game.spawn(index, false);
@@ -475,7 +482,7 @@ function cast(game: Aquarium, species: string, x: number, y: number, facing: num
 }
 
 /** 이미 화면에 있는 종을 쓰거나 없으면 새로 부른다. */
-function recruit(game: Aquarium, species: string, x: number, y: number, facing: number): number | null {
+export function recruit(game: Aquarium, species: string, x: number, y: number, facing: number): number | null {
   const index = game.indexOf(species);
   if (index === null) return null;
   const found = game.actors.find(
@@ -489,6 +496,7 @@ function recruit(game: Aquarium, species: string, x: number, y: number, facing: 
 
 /** 사건이 등장시키거나 반응시키는 종 목록이다. 모든 종(잠수부 제외)이 적어도 한 사건의 후보에 든다. */
 export function eventPool(game: Aquarium, kind: EventKind): number[] {
+  if (isExtra(kind)) return extraPool(game, kind);
   const named = (ids: string[]): number[] =>
     ids.map((id) => game.indexOf(id)).filter((index): index is number => index !== null);
   let groups: string[];
@@ -585,7 +593,7 @@ export function eventPool(game: Aquarium, kind: EventKind): number[] {
   return groupPool(game, groups, motions, visitors);
 }
 
-function groupPool(game: Aquarium, groups: string[], motions: string[], visitors: boolean): number[] {
+export function groupPool(game: Aquarium, groups: string[], motions: string[], visitors: boolean): number[] {
   const out: number[] = [];
   game.species.forEach((entry, index) => {
     if (!groups.includes(entry.group)) return;
@@ -598,7 +606,7 @@ function groupPool(game: Aquarium, groups: string[], motions: string[], visitors
 }
 
 /** 후보 가운데 조건에 맞는 종 하나를 무작위로 고른다. 후보가 없으면 난수를 쓰지 않는다. */
-function pick(game: Aquarium, pool: number[], rule: (entry: Species) => boolean): number | null {
+export function pick(game: Aquarium, pool: number[], rule: (entry: Species) => boolean): number | null {
   const fits = pool.filter((index) => rule(game.species[index]));
   if (fits.length === 0) {
     return null;
@@ -610,16 +618,16 @@ function pick(game: Aquarium, pool: number[], rule: (entry: Species) => boolean)
 const any = (): boolean => true;
 
 /** 종 번호로 한 마리를 지정 위치에 등장시킨다. */
-function castIndex(game: Aquarium, index: number, x: number, y: number, facing: number): number | null {
+export function castIndex(game: Aquarium, index: number, x: number, y: number, facing: number): number | null {
   return cast(game, game.species[index].id, x, y, facing);
 }
 
 /** 바닥 생물이 설 높이다. */
-function floorY(game: Aquarium, index: number): number {
+export function floorY(game: Aquarium, index: number): number {
   return FLOOR_Y - game.species[index].frameH * 0.5 + 3;
 }
 
-function setScript(game: Aquarium, id: number, script: Script | null): void {
+export function setScript(game: Aquarium, id: number, script: Script | null): void {
   const slot = actorById(game, id);
   if (slot !== null) {
     game.actors[slot].script = script;
@@ -637,6 +645,7 @@ function finishEvent(game: Aquarium, active: Active): void {
       actor.targetY = actor.y;
     }
   }
+  if (isExtra(active.kind)) finishExtra(game, active);
   switch (active.kind) {
     case "Current":
       game.current = 0;
@@ -673,7 +682,7 @@ function schoolCenter(game: Aquarium): [number, number] | null {
   return [sx / n, sy / n];
 }
 
-function edgeFacing(game: Aquarium): [number, number] {
+export function edgeFacing(game: Aquarium): [number, number] {
   const facing = game.random() < 0.5 ? 1 : -1;
   return [facing > 0 ? -40 : WIDTH + 40, facing];
 }
@@ -690,6 +699,10 @@ function ensureDaySchool(game: Aquarium): void {
 }
 
 function startEvent(game: Aquarium, active: Active): void {
+  if (isExtra(active.kind)) {
+    startExtra(game, active);
+    return;
+  }
   switch (active.kind) {
     case "SharkPatrol": {
       // 상어의 순찰: 상어가 무리 한가운데를 지나가면 무리가 흩어졌다가 다시 모인다(잡아먹지 않는다).
@@ -1220,6 +1233,7 @@ function anyAlive(game: Aquarium, active: Active): boolean {
 
 /** 사건 한 frame을 진행한다. false면 끝났다. */
 function stepEvent(game: Aquarium, active: Active, dt: number): boolean {
+  if (isExtra(active.kind)) return stepExtra(game, active, dt);
   switch (active.kind) {
     case "SharkPatrol": {
       if (active.cast.length === 0) return false;
@@ -1788,7 +1802,7 @@ function stepHook(game: Aquarium, dt: number): void {
   game.hook = basket;
 }
 
-function flashAt(game: Aquarium, x: number, y: number, kind: ParticleKind, count: number): void {
+export function flashAt(game: Aquarium, x: number, y: number, kind: ParticleKind, count: number): void {
   for (let index = 0; index < count; index += 1) {
     const angle = (index / count) * TAU + game.random();
     const speed = 10 + game.random() * 14;
@@ -1850,7 +1864,7 @@ export function startle(game: Aquarium, x: number, y: number, radius: number): v
 }
 
 /** 떨어진 물건 둘레로 호기심 많은 물고기가 잠깐 모여든다. */
-function gather(game: Aquarium, x: number, y: number, radius: number): void {
+export function gather(game: Aquarium, x: number, y: number, radius: number): void {
   let count = 0;
   for (const actor of game.actors) {
     const species = game.species[actor.species];

@@ -30,7 +30,8 @@ def main() -> None:
     visitors = json.loads((DATA / "visitors.json").read_text())
     sys.path.insert(0, str(ROOT / "scripts"))
     from species_table import NEW
-    expected = {entry[0] for entry in NEW} | {"clownfish", "blue-tang", "yellow-tang", "moorish-idol", "emperor-angelfish",
+    from build_sprites import VISITORS
+    expected = {entry[0] for entry in NEW} | {entry[0] for entry in VISITORS} | {"clownfish", "blue-tang", "yellow-tang", "moorish-idol", "emperor-angelfish",
                                                 "pufferfish", "lionfish", "mandarinfish", "sardine", "seahorse", "moon-jelly",
                                                 "sea-nettle", "green-turtle", "manta-ray", "hammerhead", "dolphin", "octopus",
                                                 "red-crab", "anglerfish", "firefly-squid", "whale-shark", "sunfish",

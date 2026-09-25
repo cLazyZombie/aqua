@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "capture": "node scripts/capture.mjs",
     "assets": "python3 scripts/build_sprites.py && python3 scripts/build_fx.py && python3 scripts/build_palette.py && python3 scripts/build_icons.py",
+    "audio": "python3 scripts/build_audio.py",
     "qc": "python3 scripts/qc_assets.py",
     "e2e": "python3 scripts/e2e.py",
     "smoke": "node scripts/smoke.mjs"
@@ -27,5 +28,6 @@
     "typescript": "^7.0.2",
     "vite": "^8.3.0",
     "vitest": "^5.0.1"
-  }
+  },
+  "license": "MIT"
 }

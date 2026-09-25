@@ -64,6 +64,9 @@ const SECONDS: Record<Reaction, number> = {
   zap: 2.4,
   photo: 2.4,
   dream: 10,
+  nap: 26,
+  serenade: 5,
+  sumbi: 3.2,
 };
 
 /** 몸을 움직이는(스크립트를 쓰는) 반응이다. 사건이 조종 중인 생물은 대신 인사만 한다. */
@@ -101,6 +104,9 @@ const STILL = new Set<Reaction>([
   "zap",
   "photo",
   "dream",
+  "nap",
+  "serenade",
+  "sumbi",
 ]);
 
 export function moodSeconds(kind: Reaction): number {
@@ -183,6 +189,14 @@ function opening(game: Aquarium, actor: Actor, species: Species, kind: Reaction)
       break;
   }
   if (grounded(species) && STILL.has(kind)) actor.pause = Math.max(actor.pause, SECONDS[kind]);
+}
+
+/** 사건이 생물에게 반응 하나를 바로 붙인다(스크립트가 있어도 모습만 바꾸는 반응이면 된다). */
+export function startMood(game: Aquarium, actor: Actor, kind: Reaction): void {
+  const species = game.species[actor.species];
+  actor.mood = mood(kind, actor.x, actor.y);
+  actor.lifespan = Math.max(actor.lifespan, f32(actor.age + SECONDS[kind] + 4));
+  opening(game, actor, species, kind);
 }
 
 /** 활동이 끝난 두족류가 바닥 가까이 내려앉아 잠들고, 꿈을 꾸듯 몸빛이 천천히 바뀐다. 끝나면 떠난다. */
@@ -391,6 +405,38 @@ export function stepMood(game: Aquarium, actor: Actor, species: Species, dt: num
     case "photo":
       if (at(0.5)) game.photo = 1;
       break;
+    case "nap":
+      if (every(2.6)) spawned.push(heart(actor, species, 0.4));
+      break;
+    case "serenade": {
+      // 인어공주가 노래하면 음표와 반짝이 고리가 퍼지고, 둘레 물고기가 함께 춤춘다.
+      if (every(0.45)) spawned.push(new Particle("Note", actor.x + Math.sin(age * 4) * 10, top - 4, Math.sin(age * 5) * 8, -12, 1.8, age));
+      if (at(0.3) || at(2.3)) spawned.push(new Particle("Ring", actor.x, actor.y, 0, 0, 1.2, 0));
+      if (every(0.25)) {
+        const angle = age * 5;
+        spawned.push(new Particle("Spark", actor.x + Math.cos(angle) * 22, actor.y + Math.sin(angle) * 14, 0, -6, 0.8, 0));
+      }
+      if (at(0.6)) {
+        for (const other of game.actors) {
+          if (other === actor || other.mood !== null || other.script !== null || other.depth !== 1) continue;
+          if (Math.hypot(other.x - actor.x, other.y - actor.y) > 100) continue;
+          const kind = game.species[other.species].motion === "school" ? null : "dance";
+          if (kind) {
+            other.mood = mood("dance", other.x, other.y);
+            other.lifespan = Math.max(other.lifespan, f32(other.age + SECONDS.dance + 4));
+          }
+        }
+      }
+      break;
+    }
+    case "sumbi":
+      // 해녀가 고개를 들어 휘파람 같은 숨소리를 낸다: 고리 둘과 음표.
+      if (at(0.5)) {
+        spawned.push(new Particle("Ring", actor.x, top, 0, 0, 1.4, 0));
+        spawned.push(new Particle("Ring", actor.x, top, 0, 0, 3, 0));
+        for (let n = 0; n < 3; n += 1) spawned.push(new Particle("Note", actor.x + (n - 1) * 6, top - 4, (n - 1) * 5, -12 - n * 3, 1.8, n * 0.3));
+      }
+      break;
     case "dream":
       // 잠든 숨결처럼 작은 기포가 가끔 오른다.
       if (every(1.6)) spawned.push(new Particle("Bubble", actor.x + Math.sin(age) * 3, top, 0, -6, 2.6, 0.2));
@@ -414,7 +460,7 @@ export function stepMood(game: Aquarium, actor: Actor, species: Species, dt: num
       break;
   }
   // 대부분의 반응은 끝 무렵 하트로 인사한다.
-  if (!["heart", "follow", "kiss", "hide", "dream"].includes(state.kind) && at(state.duration * 0.55)) {
+  if (!["heart", "follow", "kiss", "hide", "dream", "nap"].includes(state.kind) && at(state.duration * 0.55)) {
     spawned.push(heart(actor, species, 0));
   }
   if (state.kind === "puff" && at(state.duration - 0.3)) {
@@ -701,6 +747,24 @@ export function moodLook(actor: Actor, species: Species, time: number): Look {
     case "zap":
       look.tint = [120, 200, 255, 0.55 * env * (Math.sin(age * 43) > 0 ? 1 : 0.3)];
       break;
+    case "serenade":
+      look.rot = 0.16 * Math.sin(age * 3) * env;
+      look.tint = [255, 190, 230, 0.22 * env * (0.6 + 0.4 * Math.sin(age * 5))];
+      look.dy = -Math.abs(Math.sin(age * 2)) * 2;
+      break;
+    case "sumbi":
+      look.rot = 0.25 * Math.sin(Math.PI * Math.min(1, age / 1.2)) * env;
+      look.dy = -hop(age, 1, 1) * 4;
+      break;
+    case "nap": {
+      // 배를 드러내고 뒤집힌 채 물결에 살랑 흔들린다(해달 낮잠).
+      const [thick, over] = flipOver(age, state.duration);
+      look.sy = thick;
+      look.flipY = over;
+      look.dy = Math.sin(age * 1.6) * 1.5;
+      look.rot = Math.sin(age * 0.9) * 0.06;
+      break;
+    }
     case "dream": {
       const slot = (age / 2.2) % DREAM_COLORS.length;
       const a = DREAM_COLORS[Math.floor(slot)];

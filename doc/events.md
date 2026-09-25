@@ -1,8 +1,10 @@
-# 이벤트 39종
+# 이벤트 70종
 
 **원칙: 사건에서 생물끼리 잡아먹지 않는다.** 반응은 놀라 흩어지기, 구경하기, 숨기, 부풀기, 물고기 과자 먹기뿐이다(테스트가 매 사건 동안 등장 생물이 사라지지 않는지 확인한다).
 
 `src/sim/director.ts`의 이벤트 감독이 시간대·날씨·등장 생물 조건과 쿨다운(일반 90초, 희귀 240초, 전설 20분), 희귀도 가중치(일반 10 : 희귀 4 : 전설 1.5)로 사건을 하나씩 고른다. 사건 사이에는 22~40초를 쉬고, 폭풍 중에는 새 사건을 시작하지 않는다. 사건이 시작되면 화면 위에 자막이 뜨고(희귀 ◆, 전설 ★), 처음 겪은 사건과 처음 본 생물은 알림 없이 목격 도감에 조용히 기록된다(`Tab`으로 확인).
+
+사건은 1부 39종(`src/sim/director.ts`)과 2부 31종(`src/sim/vignettes.ts`)으로 나뉜다. 2부는 짧은 장면 위주이고, 일부는 특정 배경 컨셉에서만 일어난다. 사건이 무대에 잠깐 올리는 것(빛기둥·알·굴·빈 소라·오로라 등)은 `SetPiece`에 두고 `src/render/setpieces.ts`가 그린다.
 
 `E` 키로 조건을 무시하고 아무 사건이나 바로 일으킬 수 있다. 캡처에서는 쿼리 `event=<id>&eventAt=<초>`로 특정 사건을 강제한다.
 
@@ -48,32 +50,71 @@
 | `puffer-panic` | 복어 소동 | 일반 | 낮 | 복어·거북복들이 모였다가 상어가 지나가자 일제히 부풀어 흩어진다 |
 | `cleaning-station` | 청소 정거장 | 희귀 | 낮 | 큰 물고기가 멈춰 서면 청소놀래기·청소새우가 둘레를 돌며 청소해 준다 |
 
+## 사건 2부 31종
+
+| id | 이름 | 희귀도 | 시간대 | 배경 | 연출 |
+|---|---|---|---|---|---|
+| `manta-campfire` | 만타 캠프파이어 | 희귀 | 밤 | 어디나 | 다이버가 모래에 불빛을 세우면 빛기둥에 반짝 플랑크톤이 모이고, 쥐가오리가 빛기둥 둘레를 돈다 |
+| `beluga-rings` | 흰고래의 거품 고리 | 희귀 | 언제나 | 어디나 | 흰고래가 멈춰 도넛 기포 고리를 앞으로 불고, 떠오르는 고리를 지나 헤엄쳐 간다 |
+| `seahorse-birth` | 해마 아빠의 출산 | 희귀 | 언제나 | 어디나 | 아빠 해마가 멈춰 배 주머니에서 새끼 해마를 흩뿌리고 하트를 띄운다 |
+| `cuttle-show` | 갑오징어 색 쇼 | 일반 | 언제나 | 어디나 | 갑오징어·오징어 셋이 나란히 서서 차례로 몸 색을 바꾼다 |
+| `flying-fish-leap` | 날치 떼 도약 | 일반 | 낮 | 어디나 | 날치 다섯 마리가 차례로 수면 위로 뛰어올라 물보라를 남긴다 |
+| `dolphin-kelp` | 돌고래의 해초 놀이 | 희귀 | 낮 | 어디나 | 돌고래 둘이 넓게 돌며 해초 잎을 지느러미에 걸었다가 놓아 서로 주고받는다 |
+| `otter-raft` | 해달 손잡고 낮잠 | 희귀 | 낮 | 어디나 | 해달 둘이 수면에 누워 손을 잡고 떠다니며 존다 |
+| `pearl-night` | 진주가 빛나는 밤 | 희귀 | 밤 | 어디나 | 바닥 조개가 모두 입을 열고 진주가 은은하게 빛난다 |
+| `octopus-garden` | 문어의 정원 | 일반 | 언제나 | 어디나 | 문어가 모래 위 조개껍데기를 하나씩 집어 자기 굴 앞에 모아 정원을 꾸민다 |
+| `goby-shrimp` | 망둑과 딱총새우의 동거 | 일반 | 낮 | 어디나 | 딱총새우가 굴 모래를 퍼내고 망둑이 망을 본다. 창꼬치가 지나가면 둘이 굴로 쏙 들어갔다 나온다 |
+| `silver-migration` | 은빛 무리의 대이동 | 희귀 | 낮 | 어디나 | 정어리·멸치·청어·고등어 무리 둘이 위아래로 나란히 화면을 가로지른다 |
+| `sun-flecks` | 켈프 숲의 햇살 커튼 | 일반 | 낮 | 켈프 숲 | 다시마 사이로 흔들리는 빛기둥이 내려오고 모래에 빛 무늬가 일렁인다 |
+| `urchin-march` | 성게 행진 | 일반 | 언제나 | 켈프 숲 | 보라성게 다섯이 줄지어 바닥을 천천히 건너며 모래 먼지를 남긴다 |
+| `wreck-gold` | 난파선 속 금화 | 희귀 | 언제나 | 난파선 | 선체 구멍에서 금빛이 새어 나오고 금화 반짝임이 떠오르며, 물고기가 구경하러 모인다 |
+| `rune-glow` | 룬이 빛나는 밤 | 희귀 | 밤 | 해저 유적 | 유적 돌이 왼쪽부터 차례로 청록빛으로 떠오른다 |
+| `aurora` | 얼음 너머 오로라 | 희귀 | 밤 | 빙하 바다 | 얼음판 너머로 초록·보라 빛 커튼이 느리게 일렁인다 |
+| `ice-drop` | 얼음 조각이 떨어진다 | 일반 | 언제나 | 빙하 바다 | 얼음 조각이 기포를 끌며 가라앉아 바닥에 내려앉는다 |
+| `shell-swap` | 소라게 집 바꾸기 | 희귀 | 언제나 | 어디나 | 빈 소라 껍데기가 나타나면 소라게들이 크기순으로 줄을 서서 차례로 한 칸씩 큰 집으로 옮긴다 |
+| `penguin-dive` | 펭귄 떼 다이빙 | 희귀 | 낮 | 빙하 바다·켈프 숲 | 아델리펭귄 다섯이 물보라를 일으키며 수면으로 뛰어들어 비스듬히 내려간다 |
+| `clown-eggs` | 흰동가리 알 지키기 | 희귀 | 언제나 | 어디나 | 흰동가리 둘이 모래 위 주황 알 무더기 둘레를 돌며 지키고, 알이 깨면 치어가 반짝이며 떠오른다 |
+| `fireworks` | 수면 위 불꽃놀이 | 희귀 | 밤 | 어디나 | 수면 너머로 색색의 불꽃이 둥글게 터진다 |
+| `duck-flotilla` | 고무 오리 선단 | 희귀 | 낮 | 어디나 | 노란 고무 오리 다섯이 줄지어 수면을 떠간다 |
+| `haenyeo-dive` | 해녀의 물질 | 희귀 | 낮 | 어디나 | 해녀가 테왁을 수면에 두고 바닥까지 내려가 미역을 따 망사리에 담고, 수면으로 올라 숨비소리를 낸다 |
+| `sumbi-chorus` | 숨비소리 | 희귀 | 낮 | 어디나 | 해녀 셋이 차례로 수면으로 올라 휘파람 같은 숨비소리를 낸다 |
+| `haenyeo-dolphins` | 해녀와 제주 돌고래 | 전설 | 낮 | 어디나 | 해녀가 헤엄쳐 가고 큰돌고래(제주 남방큰돌고래 대신) 둘이 곁을 따라가며 하트를 띄운다 |
+| `coral-planting` | 산호 심는 다이버 | 희귀 | 언제나 | 어디나 | 다이버가 양옆 바닥에 산호 싹을 심으면 조금씩 자란다. 심은 산호는 이번 실행 동안 남는다 |
+| `turtle-buddy` | 거북과 헤엄치는 다이버 | 희귀 | 낮 | 어디나 | 바다거북이 지나가고 다이버가 나란히 따라 헤엄친다 |
+| `diver-rings` | 다이버의 기포 고리 묘기 | 일반 | 언제나 | 어디나 | 다이버가 도넛 기포 고리를 불어 올리고, 둘레 물고기가 고리 사이로 헤엄친다 |
+| `mermaid-song` | 인어공주의 노래 | 전설 | 언제나 | 어디나 | 인어공주가 바닥 가까이 앉아 노래하고(음표·빛 고리), 둘레 물고기가 구경하러 모인다 |
+| `mermaid-ring` | 인어와 물고기의 원무 | 희귀 | 언제나 | 어디나 | 인어공주가 한가운데서 노래하면 물고기 무리가 그 둘레를 원을 그리며 돈다 |
+| `mermaid-pearl` | 인어공주의 진주 선물 | 희귀 | 언제나 | 어디나 | 인어공주가 대왕조개 앞에 내려가 조개가 진주를 보여 주면 노래로 답하고 떠난다 |
+
 ## 종 그룹과 반응하는 사건
 
-모든 생물(잠수부 제외)은 `scripts/species_table.py`의 그룹에 속하고, 모든 그룹에는 반응하는 사건이 있다. 단위 테스트가 모든 종이 적어도 한 사건의 후보인지 확인한다.
+모든 생물(아쿠아다이버 제외)은 `scripts/species_table.py`의 그룹에 속하고, 모든 그룹에는 반응하는 사건이 있다. 단위 테스트가 모든 종이 적어도 한 사건의 후보인지 확인한다.
 
 | 그룹 | 사건 |
 |---|---|
-| reef·clown | feeding-frenzy, clown-home, treat-basket |
-| school | shark-patrol, bubble-net(낮 무리), glow-wave(밤 무리) |
+| reef·clown | feeding-frenzy, clown-home, treat-basket, clown-eggs, wreck-gold, goby-shrimp(노랑망둑) |
+| school | shark-patrol, bubble-net(낮 무리), glow-wave(밤 무리), silver-migration, mermaid-ring |
 | shark | shark-patrol, puffer-panic, ink-escape |
 | bottomshark | shark-nap |
-| ray | manta-roll, ray-squadron, shark-nap(톱가오리·가래상어) |
-| dolphin | bubble-net |
-| whale | whale-pass |
-| pinniped·turtle | surface-breath |
-| crust·nudi | crab-standoff, floor-march |
-| ceph | ink-escape |
+| ray | manta-roll, ray-squadron, shark-nap(톱가오리·가래상어), manta-campfire |
+| dolphin | bubble-net, dolphin-kelp, haenyeo-dolphins(큰돌고래) |
+| whale | whale-pass, beluga-rings(흰고래) |
+| pinniped·turtle | surface-breath, otter-raft(해달), turtle-buddy |
+| crust·nudi | crab-standoff, floor-march, shell-swap(소라게), goby-shrimp(딱총새우) |
+| ceph | ink-escape, cuttle-show, octopus-garden |
 | jelly | jelly-bloom |
-| seahorse | seahorse-dance |
+| seahorse | seahorse-dance, seahorse-birth |
 | deep | deep-visitors |
 | eel | eel-peek |
 | camo | hide-and-seek |
 | puffer | puffer-panic |
 | bigreef | cleaning-station |
-| pelagic | pelagic-rush |
+| pelagic | pelagic-rush, flying-fish-leap(날치) |
 | cold | current(한류를 타고 흘러듦) |
-| sessile | coral-spawn, eel-peek |
+| sessile | coral-spawn, eel-peek, pearl-night·mermaid-pearl(대왕조개), urchin-march(보라성게) |
+| penguin | penguin-dive |
+| haenyeo | haenyeo-dive, sumbi-chorus, haenyeo-dolphins |
+| mermaid | mermaid-song, mermaid-ring, mermaid-pearl |
 
 ## 상시 반응
 
@@ -86,9 +127,10 @@
 | 생물에 마우스 올리기 | 연노랑 테두리와 이름 |
 | 생물을 왼쪽 클릭 | 그 종이 좋아하는 먹이를 건넨다. 받아 먹으면 하트 |
 | 빈 곳을 왼쪽 클릭 | 기본 가루 먹이: 작은 물고기·무리가 먹는다 |
-| 생물을 오른쪽 클릭 | 종마다 다른 교감 반응 37가지([interaction.md](interaction.md)) |
+| 생물을 오른쪽 클릭 | 종마다 다른 교감 반응 39가지([interaction.md](interaction.md)) |
 | 기포에 마우스 스치기 | 떠오르는 기포와 기포 줄기 알이 작은 고리를 남기고 톡 터진다 |
-| 빈 곳을 오른쪽 클릭 | 유리 두드리기: 그 자리에서 화면이 세 겹으로 둥글게 일렁이고 근처 물고기가 놀라 흩어진다(무리는 잠깐 그 자리를 피하고, 큰 생물은 돌아서지 않고 빨라지기만 한다). 게임에 오디오가 없어 소리는 나지 않는다 |
+| 빈 곳을 오른쪽 클릭 | 유리 두드리기: 그 자리에서 화면이 세 겹으로 둥글게 일렁이고 근처 물고기가 놀라 흩어진다(무리는 잠깐 그 자리를 피하고, 큰 생물은 돌아서지 않고 빨라지기만 한다). 낮고 둔한 보글 소리가 난다 |
 | `L` | 밤 손전등: 포인터가 광원이 되어 비춘 생물 몸이 밝아지고, 야행성·발광 생물은 모여들고 낮 물고기는 피한다 |
-| `Tab` | 목격 도감(생물 + 사건 39, 여러 쪽). `←`/`→`로 넘긴다. 브라우저 localStorage `aqua.dex`에 저장된다 |
+| `M` | 소리 켜기/끄기(다음 실행에도 기억) |
+| `Tab` | 목격 도감(생물 + 사건 70, 여러 쪽). `←`/`→`로 넘긴다. 브라우저 localStorage `aqua.dex`에 저장된다 |
 | `E` | 아무 사건 바로 일으키기 |

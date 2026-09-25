@@ -17,6 +17,24 @@ const GLOW_SCENARIOS = GLOWERS.flatMap((id) => [
 const NIGHT_EVENTS = ["angler-lantern", "ink-escape", "jelly-bloom", "giant-squid", "coral-spawn", "glow-wave", "meteor-shower", "submarine", "deep-visitors"];
 const NIGHT_EVENT_SCENARIOS = NIGHT_EVENTS.map((id) => ({ name: `glow-event-${id}`, seconds: id === "glow-wave" ? 123 : 127, started: true, event: id, eventAt: 119 }));
 
+/** 사건 2부 31종: (id, 시작 뒤 찍을 초, 밤인지, 배경 컨셉). 한가운데 모습을 찍는다. */
+const EXTRA_EVENTS = [
+  ["manta-campfire", 12, true], ["beluga-rings", 14], ["seahorse-birth", 19], ["cuttle-show", 10], ["flying-fish-leap", 4],
+  ["dolphin-kelp", 10], ["otter-raft", 12], ["pearl-night", 8, true], ["octopus-garden", 16], ["goby-shrimp", 8],
+  ["silver-migration", 10], ["sun-flecks", 8, false, "kelp"], ["urchin-march", 20, false, "kelp"], ["wreck-gold", 10, false, "wreck"],
+  ["rune-glow", 16, true, "ruins"], ["aurora", 12, true, "ice"], ["ice-drop", 9, false, "ice"], ["shell-swap", 26], ["penguin-dive", 1.4, false, "ice"],
+  ["clown-eggs", 18], ["fireworks", 5, true], ["duck-flotilla", 16], ["haenyeo-dive", 16], ["sumbi-chorus", 7.5], ["haenyeo-dolphins", 12],
+  ["coral-planting", 13], ["turtle-buddy", 12], ["diver-rings", 13], ["mermaid-song", 12], ["mermaid-ring", 12], ["mermaid-pearl", 13],
+];
+export const EXTRA_EVENT_SCENARIOS = EXTRA_EVENTS.map(([id, after, night, scene]) => ({
+  name: `vignette-${id}`,
+  seconds: (night ? 119 : 20) + after,
+  started: true,
+  event: id,
+  eventAt: night ? 119 : 20,
+  ...(scene ? { scene } : {}),
+}));
+
 export const SCENARIOS = [
   { name: "title", seconds: 0, started: false, enter: true },
   { name: "day", seconds: 16, started: true },
@@ -76,6 +94,7 @@ export const SCENARIOS = [
   { name: "ambient-pop", seconds: 30, started: true, pointer: "62,150" },
   ...GLOW_SCENARIOS,
   ...NIGHT_EVENT_SCENARIOS,
+  ...EXTRA_EVENT_SCENARIOS,
 ];
 
 export function sizeOf(scenario) {

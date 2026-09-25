@@ -13,6 +13,7 @@ pnpm dev          # 개발 서버
 pnpm build        # 타입 검사 + 빌드
 pnpm test         # vitest(시뮬레이션·기준 기록 동일성)
 pnpm assets       # art/ 원본 → public/assets 그림 + src/data 목록 JSON + 팔레트
+pnpm audio        # 음원 출처에서 받아 음량 맞춰 public/assets/audio/*.mp3로 굽기(ffmpeg)
 pnpm qc           # 에셋 계약 검사
 pnpm e2e          # headless 캡처 후 화면·상태 검사(output/capture)
 pnpm smoke        # 실제 루프·입력·창 크기 스모크
@@ -25,6 +26,7 @@ pnpm reference    # 동작을 일부러 바꾼 뒤 기준 기록 다시 만들�
 
 - `src/sim/`: 시뮬레이션(생물·무리·사건 감독·도감). 종별 활동 시간·먹이·교감 반응은 `traits.ts`, 교감 연출은 `mood.ts`다. 난수 호출 순서나 동작을 바꾸면 `tests/fixtures/reference-seed7.json` 기준 기록이 어긋나므로, 의도한 변경이면 `pnpm reference`로 다시 만든다.
 - `src/render/`: 스프라이트 일괄 렌더러, 셰이더(`shaders/*.frag`), 장면 층, 호버·마우스 판정(`interact.ts`), 소소한 볼거리(`ambient.ts`), UI 글자. 그리는 쪽 볼거리는 시간·해시로만 정하고 시뮬레이션 난수를 쓰지 않는다.
+- `src/audio.ts`: 배경 음악(낮·밤 목록)과 물속 소리. 창 모드에서만 돌고 캡처에서는 만들지 않는다. 시뮬레이션 상태를 읽기만 하고 난수는 `Math.random`을 쓴다. 음원 출처·라이선스는 `public/assets/audio/CREDITS.txt`이고, CC BY 곡을 더하면 타이틀 아래 표기와 LICENSE도 고친다.
 - `src/data/`: `scripts/build_*.py`가 만드는 목록 JSON(생물 카탈로그·방문자·소품·사건 그림). 손으로 고치지 않는다. Vite는 `public/` 파일을 import할 수 없으므로 코드가 읽는 JSON은 여기 둔다.
 - `public/assets/`: 굽힌 그림(생물 색·노멀·발광 시트, 효과, 글꼴).
 - `art/`: Codex로 그린 원본. 프롬프트는 `art/PROMPTS.md`, 종 목록·그룹·시점은 `scripts/species_table.py`. 배경 컨셉은 `art/scenes/<id>/`(far·deep·back·mid·floor·props), 산호·해초·조개는 `art/props/`.

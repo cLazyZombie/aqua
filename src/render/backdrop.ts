@@ -3,7 +3,7 @@
 import { cloudCover } from "./ambient";
 import type { SceneAssets } from "./assets";
 import type { Frame, Sprite } from "./draw";
-import { WHITE, cellUv, fullUv, hash, mix, pixelRect, pixelSprite, rgb, rgba, solids, textured } from "./draw";
+import { WHITE, cellUv, fullUv, hash, mix, pixelRect, pixelSprite, rgb, rgba, roundHalfAway, solids, textured } from "./draw";
 import type { View } from "./scene";
 import { type Aquarium, FLOOR_Y, HEIGHT, SURFACE_Y, WIDTH, faceTravel, grounded, ventBubbles } from "./simapi";
 
@@ -106,6 +106,8 @@ function clamOpening(game: Aquarium, x: number, phase: number): [number, number,
   const tapped = game.taps.some(([tx, ty, age]) => age < 1.2 && Math.hypot(tx - x, ty - FLOOR_Y) < 90);
   if (tapped) open = 0;
   else if (nearby) open = Math.min(open, 1);
+  // 진주가 빛나는 밤에는 모두 활짝 연다.
+  if (game.setpiece.pearls > 0.3 && !tapped) open = 2;
   return [open, t, tapped];
 }
 
@@ -137,6 +139,18 @@ export function appendClams(frame: Frame, game: Aquarium, assets: SceneAssets): 
       for (let bead = 0; bead < 2; bead++) {
         bubbles.push(pixelSprite(x + (bead - 0.5) * 5, bottom - prop.h * 0.5 - rise * 14 - bead * 4, 7, 7, cellUv(0, 3, false), rgba(255, 255, 255, 1 - rise), -57));
       }
+    }
+    if (game.setpiece.pearls > 0.05 && open === 2) {
+      // 조개 속이 은은하게 빛난다(진주조개는 더 밝다).
+      const strength = game.setpiece.pearls * (prop.name === "clam-pearl" ? 1 : 0.6) * (0.85 + 0.15 * Math.sin(game.time * 2 + phase * 9));
+      const cy = bottom - prop.h * 0.42;
+      [
+        [16, 0.1],
+        [10, 0.12],
+        [5, 0.16],
+      ].forEach(([size, alpha]) => {
+        extras.push({ cx: roundHalfAway(x) + 0.5, cy: roundHalfAway(cy) + 0.5, w: size, h: size * 0.7, rotation: 0, shape: { kind: "ellipse", segments: 16 }, uv: fullUv(), color: rgba(255, 236, 240, alpha * strength), order: 34 });
+      });
     }
     if (prop.name === "clam-pearl" && open === 2) {
       const beat = game.time * 0.7 + phase * 5;

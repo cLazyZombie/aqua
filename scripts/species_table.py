@@ -26,7 +26,7 @@ EXISTING_GROUPS = {
     "green-turtle": "turtle", "manta-ray": "ray", "hammerhead": "shark", "dolphin": "dolphin",
     "octopus": "ceph", "red-crab": "crust", "anglerfish": "deep", "firefly-squid": "school",
     "whale-shark": "shark", "sunfish": "pelagic", "baby-turtle": "turtle", "oarfish": "deep",
-    "diver": "none",
+    "diver": "none", "adelie-penguin": "penguin", "haenyeo": "haenyeo", "mermaid": "mermaid",
 }
 
 N, D, A = "night", "day", "any"

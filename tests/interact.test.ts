@@ -95,6 +95,34 @@ describe("interaction", () => {
     LONG,
   );
 
+  it("test_feed_actor_when_diver_or_haenyeo_is_clicked_then_they_share_food_instead_of_eating", () => {
+    for (const [id, kind] of [
+      ["diver", "Food"],
+      ["haenyeo", "Leaf"],
+    ] as const) {
+      const index = species.findIndex((entry) => entry.id === id);
+      const game = alone(index);
+      const actor = place(game, index);
+      expect(game.feedActor(actor)).toBe(kind);
+      // 누구나 먹을 수 있는 먹이(받은 생물 없음)를 둘레에 뿌린다.
+      const shared = game.particles.filter((particle) => particle.kind === kind);
+      expect(shared.length).toBeGreaterThanOrEqual(3);
+      expect(shared.every((particle) => particle.owner === 0)).toBe(true);
+    }
+  });
+
+  it("test_react_when_mermaid_sings_then_nearby_fish_dance", () => {
+    const mermaid = species.findIndex((entry) => entry.id === "mermaid");
+    const tang = species.findIndex((entry) => entry.id === "blue-tang");
+    const game = alone(mermaid);
+    const singer = place(game, mermaid);
+    const fish = place(game, tang);
+    fish.x = singer.x + 40;
+    expect(game.react(singer)).toBe("serenade");
+    for (let frame = 0; frame < 30; frame += 1) game.step(1 / 30);
+    expect(fish.mood?.kind).toBe("dance");
+  });
+
   it("test_react_when_school_member_is_right_clicked_then_whole_school_forms_a_heart", () => {
     const sardine = species.findIndex((entry) => entry.id === "sardine");
     const game = alone(sardine);

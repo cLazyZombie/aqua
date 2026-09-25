@@ -97,7 +97,13 @@ export type Reaction =
   | "zap"
   | "photo"
   /** 사용자 교감이 아니라 새벽에 잠드는 두족류의 꿈이다. */
-  | "dream";
+  | "dream"
+  /** 사용자 교감이 아니라 사건(해달 낮잠)이 붙이는 긴 배 보이기다. */
+  | "nap"
+  /** 인어공주가 노래하면 둘레 물고기가 함께 춤춘다. */
+  | "serenade"
+  /** 해녀가 수면에 올라 휘파람 같은 숨비소리를 낸다. */
+  | "sumbi";
 
 /** 하루 안의 활동 구간(시, 0..24)이다. start > end면 자정을 넘긴다. [0, 24]는 종일이다. */
 export type Hours = [number, number];
@@ -105,6 +111,8 @@ export type Hours = [number, number];
 export interface Traits {
   hours: Hours;
   diet: FoodKind;
+  /** 사람(해녀·다이버)은 먹이를 받는 대신 둘레에 이 먹이를 나눠 준다. */
+  gift: FoodKind | null;
   reaction: Reaction;
   /** 0: 발광 없음, 1: 발광, 2: 밤에 둥근 빛 고리를 두를 만큼 강한 발광. */
   glow: 0 | 1 | 2;
@@ -221,6 +229,7 @@ const GROUP_DIET: Record<string, FoodKind> = {
   puffer: "Food",
   sessile: "Glimmer",
   whale: "Glimmer",
+  mermaid: "Cookie",
 };
 
 const DIET: Record<string, FoodKind> = {
@@ -307,6 +316,8 @@ const GROUP_REACTION: Record<string, Reaction> = {
   puffer: "bob",
   sessile: "retract",
   whale: "song",
+  haenyeo: "sumbi",
+  mermaid: "serenade",
 };
 
 const REACTION: Record<string, Reaction> = {
@@ -386,6 +397,12 @@ const REACTION: Record<string, Reaction> = {
   diver: "photo",
 };
 
+/** 사람은 먹이를 받지 않고 나눠 준다: 다이버는 가루 먹이를 짜 주고, 해녀는 망사리의 미역을 풀어 준다. */
+const GIFTS: Record<string, FoodKind> = {
+  diver: "Food",
+  haenyeo: "Leaf",
+};
+
 /** 밤에 둥근 빛 고리를 두르는 강한 발광 종이다. */
 const STRONG_GLOW = new Set([
   "anglerfish",
@@ -411,6 +428,7 @@ export function traitsOf(species: Species): Traits {
   return {
     hours: HOURS[species.id] ?? defaultHours(species.activity),
     diet: DIET[species.id] ?? GROUP_DIET[species.group] ?? "Food",
+    gift: GIFTS[species.id] ?? null,
     reaction,
     glow,
   };

@@ -8,6 +8,7 @@ import type { Camera, Frame } from "./draw";
 import { roundHalfAway, worldToScreen } from "./draw";
 import * as events from "./events";
 import * as interact from "./interact";
+import * as setpieces from "./setpieces";
 import * as overlay from "./overlay";
 import { type Aquarium, HEIGHT, WIDTH } from "./simapi";
 
@@ -74,6 +75,7 @@ export function buildFrame(game: Aquarium, assets: SceneAssets, viewport: [numbe
   creatures.appendFar(frame, game, assets);
   backdrop.appendBackProps(frame, view, game, assets);
   backdrop.appendClams(frame, game, assets);
+  setpieces.appendSetPieces(frame, game, assets);
   backdrop.appendRays(frame, game, assets);
   events.appendObjects(frame, game, assets);
   creatures.appendNear(frame, game, assets);

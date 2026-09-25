@@ -23,7 +23,9 @@ export function bodyOf(game: Aquarium, assets: SceneAssets, actor: Actor, color:
   const art = assets.species[actor.species];
   const look = moodLook(actor, species, game.time);
   const alt = (actor.puffed > 0 || look.alt) && art.alt !== null;
-  const size: [number, number] = alt && art.alt ? [art.alt.w, art.alt.h] : [species.frameW, species.frameH];
+  const baseSize: [number, number] = alt && art.alt ? [art.alt.w, art.alt.h] : [species.frameW, species.frameH];
+  // 사건이 개체 크기를 달리 보일 때(소라게 집 바꾸기) 배율을 곱한다.
+  const size: [number, number] = [baseSize[0] * actor.scale, baseSize[1] * actor.scale];
   let [x, y] = actor.pose(game.time, species);
   // 교감 자세 그림(집게 들기)은 몸 높이가 달라도 발이 같은 모래선에 닿게 아래를 맞춘다.
   if (alt && art.alt && grounded(species)) y -= (size[1] - species.frameH) * 0.5;

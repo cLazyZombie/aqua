@@ -2,6 +2,7 @@
 
 import "./style.css";
 
+import { Sound } from "./audio";
 import { type SceneAssets, loadScene, loadSceneAssets } from "./render/assets";
 import { clamStates } from "./render/backdrop";
 import { availableScenes, pickScene } from "./render/scenes";
@@ -17,6 +18,7 @@ declare global {
     __aquaReport?: unknown;
     __aquaError?: string;
     __aquaEnter?: () => Promise<void>;
+    __aquaSound?: Sound;
   }
 }
 
@@ -111,18 +113,38 @@ class App {
   }
 }
 
+/// 소리 켜기/끄기 같은 짧은 알림을 오른쪽 위에 잠깐 띄운다.
+function toast(stage: HTMLElement, text: string): void {
+  let note = document.getElementById("toast");
+  if (!note) {
+    note = document.createElement("div");
+    note.id = "toast";
+    stage.appendChild(note);
+  }
+  note.textContent = text;
+  note.classList.add("show");
+  window.clearTimeout(Number(note.dataset.timer ?? 0));
+  note.dataset.timer = String(window.setTimeout(() => note.classList.remove("show"), 1400));
+}
+
 /// 창 모드: 약 60fps로 한 걸음씩 진행하고 그린다.
 function runLive(app: App): void {
   const game = app.game;
   game.dex = Dex.load(true);
   const stage = document.getElementById("stage") as HTMLDivElement;
+  const sound = new Sound();
+  window.__aquaSound = sound;
+  // 브라우저는 사용자 입력이 있어야 소리를 낼 수 있다(모바일은 터치를 뗄 때).
+  for (const kind of ["pointerup", "touchend"]) window.addEventListener(kind, () => sound.unlock());
   let last = performance.now();
   const loop = (now: number) => {
     requestAnimationFrame(loop);
     // 약 60fps(16ms 간격)로만 다시 그린다.
     if (now - last < 15.5) return;
     app.syncSize(null, window.devicePixelRatio || 1);
-    game.step((now - last) / 1000);
+    const dt = (now - last) / 1000;
+    game.step(dt);
+    sound.update(game, Math.min(dt, 0.25));
     last = now;
     app.updateHover();
     stage.style.cursor = game.hover !== null ? "pointer" : "";
@@ -134,7 +156,10 @@ function runLive(app: App): void {
     if (event.repeat) return;
     const code = event.code;
     if (code === "Tab" || code === "F11" || code.startsWith("Arrow")) event.preventDefault();
-    if (code === "KeyF" || code === "F11") {
+    if (code !== "KeyM") sound.unlock();
+    if (code === "KeyM") {
+      toast(stage, sound.toggle() ? "소리 켬" : "소리 끔");
+    } else if (code === "KeyF" || code === "F11") {
       if (document.fullscreenElement) void document.exitFullscreen();
       else void document.documentElement.requestFullscreen?.();
     } else if (code === "KeyP") {
@@ -172,6 +197,7 @@ function runLive(app: App): void {
   stage.addEventListener("contextmenu", (event) => event.preventDefault());
   stage.addEventListener("mousedown", (event) => {
     event.preventDefault();
+    sound.unlock();
     game.pointer = app.pointerAt(event.clientX, event.clientY);
     if (!game.started) {
       game.started = true;
@@ -185,9 +211,13 @@ function runLive(app: App): void {
     if (event.button === 0) {
       if (target) game.feedActor(target);
       else game.feed(x, y);
+      sound.feed(x);
     } else if (event.button === 2) {
       if (target) game.react(target);
-      else game.tap(x, y);
+      else {
+        game.tap(x, y);
+        sound.tap(x);
+      }
     }
   });
 }
@@ -282,6 +312,19 @@ function report(game: Aquarium, image: string): unknown {
     catalog_count: game.species.filter((entry) => !entry.visitor).length,
     event: game.director.active ? eventId(game.director.active.kind) : null,
     banner: game.director.banner ? game.director.banner.text : null,
+    // 지금 사건의 출연진(화면에 남아 있는 개체만)과 무대 장치 상태다.
+    cast: (game.director.active?.cast ?? []).flatMap((id) => {
+      const actor = game.actors.find((entry) => entry.id === id);
+      return actor ? [{ id: game.species[actor.species].id, x: actor.x, y: actor.y, mood: actor.mood ? actor.mood.kind : null }] : [];
+    }),
+    setpiece: (() => {
+      const set = game.setpiece;
+      return {
+        beam: set.beam !== null, toy: set.toy !== null, pearls: set.pearls, trinkets: set.trinkets.length, burrow: set.burrow !== null,
+        sunflecks: set.sunflecks, wreck_glow: set.wreckGlow, runes: set.runeStrength, aurora: set.aurora, floaters: set.floaters.length,
+        nest: set.nest !== null, shell: set.shell !== null, planted: set.planted.length,
+      };
+    })(),
     debris: game.debris.length,
     hook: game.hook !== null,
     far: game.farThings.map((thing) => thing.kind),

@@ -269,4 +269,17 @@ function appendTitle(frame: Frame, view: View, game: Aquarium): void {
     shadow: { color: [4, 16, 44, blink], dx: px(2), dy: px(2) },
     align: "center",
   });
+  // CC BY 음악 저작자 표기(나머지 음원은 CC0, 자세한 목록은 assets/audio/CREDITS.txt).
+  frame.texts.push({
+    x: 0,
+    y: at(506),
+    w: Math.trunc(view.viewport[0]),
+    h: px(22),
+    text: "음악 「Starlight」 Eric Matyas (Soundimage.org) · 「Gentle Lullaby Loop」 Frances Calceta · CC BY 3.0",
+    fontSize: px(12),
+    bold: false,
+    color: [236, 248, 252, 235],
+    shadow: { color: [4, 16, 44, 235], dx: px(2), dy: px(2) },
+    align: "center",
+  });
 }

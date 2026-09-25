@@ -141,6 +141,52 @@ def check_scenes() -> None:
     assert 2 <= len(states) <= 4 and min(states) == 0 and max(states) >= 1, states
 
 
+def check_vignettes() -> None:
+    """사건 2부 31종: 찍은 순간에도 사건이 이어지고, 출연진이 남아 있고, 무대 장치가 켜져 있고, 밤 빛이 하얗게 타지 않는다."""
+    listing = subprocess.run(
+        ["node", "-e", "import('./scripts/scenarios.mjs').then(m => console.log(JSON.stringify(m.EXTRA_EVENT_SCENARIOS)))"],
+        cwd=ROOT, check=True, capture_output=True, text=True)
+    scenarios = json.loads(listing.stdout)
+    assert len(scenarios) == 31, len(scenarios)
+    # 사건마다 켜져 있어야 하는 무대 장치다.
+    stage = {"manta-campfire": "beam", "dolphin-kelp": "toy", "pearl-night": "pearls", "octopus-garden": "trinkets",
+             "goby-shrimp": "burrow", "sun-flecks": "sunflecks", "wreck-gold": "wreck_glow", "rune-glow": "runes",
+             "aurora": "aurora", "shell-swap": "shell", "clown-eggs": "nest", "duck-flotilla": "floaters",
+             "coral-planting": "planted"}
+    for scenario in scenarios:
+        event = scenario["event"]
+        image, report = load(scenario["name"])
+        assert report["event"] == event, f"{event}: event ended before the capture ({report['event']})"
+        assert report["scene"] == scenario.get("scene", "reef"), (event, report["scene"])
+        if event in stage:
+            assert report["setpiece"][stage[event]], f"{event}: {stage[event]} is off"
+        # 밤 사건의 빛만 본다(낮에는 흰고래처럼 원래 하얀 몸이 있다).
+        if report["night"] > 0.9:
+            burnt = clipped(np.asarray(image).astype(int))
+            assert burnt < 0.1, f"{event}: light burns white ({burnt:.3f}%)"
+    # 출연진은 사건 중에 사라지지 않는다(해녀·다이버·인어도 제자리에 있다).
+    for event, species in [("haenyeo-dive", "haenyeo"), ("sumbi-chorus", "haenyeo"), ("coral-planting", "diver"),
+                           ("turtle-buddy", "diver"), ("diver-rings", "diver"), ("mermaid-song", "mermaid"),
+                           ("mermaid-ring", "mermaid"), ("mermaid-pearl", "mermaid"), ("penguin-dive", "adelie-penguin")]:
+        _, report = load(f"vignette-{event}")
+        assert any(c["id"] == species and -20 < c["x"] < 500 for c in report["cast"]), f"{event}: {species} missing"
+    # 제주 돌고래는 큰돌고래가 해녀를 따른다.
+    _, jeju = load("vignette-haenyeo-dolphins")
+    assert sorted(c["id"] for c in jeju["cast"]) == ["dolphin", "dolphin", "haenyeo"], jeju["cast"]
+    # 오로라와 불꽃은 비네트 위에서도 보인다(같은 밤 장면보다 위쪽이 밝다).
+    aurora = np.asarray(load("vignette-aurora")[0]).astype(int)[0:70]
+    plain = np.asarray(load("scene-ice-night")[0]).astype(int)[0:70]
+    assert aurora[..., 1].mean() > plain[..., 1].mean() + 8, "aurora should glow above the ice"
+    sky = np.asarray(load("vignette-fireworks")[0]).astype(int)[0:120]
+    sparks = int(((sky.max(2) > 170) & (sky.max(2) - sky.min(2) > 60)).sum())
+    assert sparks > 500, f"fireworks too faint ({sparks})"
+    # 흰동가리 알은 모래 위에 주황빛으로 보인다.
+    eggs, eggs_report = load("vignette-clown-eggs")
+    ex = int(np.mean([c["x"] for c in eggs_report["cast"]]) * 2)
+    patch = np.asarray(eggs).astype(int)[488:512, max(0, ex - 36): ex + 36].reshape(-1, 3)
+    assert int(((patch[:, 0] > 200) & (patch[:, 1] > 100) & (patch[:, 1] < 190) & (patch[:, 2] < 140)).sum()) > 60, "clownfish eggs hidden"
+
+
 def main() -> None:
     subprocess.run(["node", "scripts/capture.mjs"], cwd=ROOT, check=True)
     title, title_report = load("title")
@@ -237,11 +283,12 @@ def main() -> None:
     check_glow()
     check_ambient()
     check_scenes()
+    check_vignettes()
     print("E2E PASS: title, day motion, whale dusk, night glow, dawn, storm flash, feeding; "
           "hover outline+name, reactions (crab claws, puffer, pearl, dolphin leap, school heart), treat hearts, night rings; "
           "soft glow for every glowing species (normal + flare) and night event; "
           "ambient: silver glints, surface reflection, moon, floor glow, variants, regulars, dream, bubble pop, prints; "
-          "scenes: 5 concepts day/night, random layout, clams; "
+          "scenes: 5 concepts day/night, random layout, clams; vignettes: 31 events (stage, cast, aurora, fireworks, eggs); "
           "all lit species, boids school, facing, pixel grid; resize cover; "
           "events: chest, shark patrol (no eating), tap ripple, treat basket, diver, dex")
 

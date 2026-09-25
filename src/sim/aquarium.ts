@@ -35,6 +35,7 @@ import { dream, type Mood, moodStill, react, stepMood } from "./mood";
 import { clamp, f32, fract, hash01, minBy, pickIndex, retain, round, signum, toUsize } from "./num";
 import { mixSeed, Rng } from "./rng";
 import { School, steer, type Threat } from "./school";
+import { SetPiece } from "./vignettes";
 import { awakeAt, dreamer, type FoodKind, FOOD_KINDS, hourOf, hoursSinceStart, type Reaction, type Traits, traitTable, type Variant } from "./traits";
 
 export {
@@ -98,6 +99,11 @@ export class Actor {
   individual = -1;
   /** 새벽에 이미 한 번 잠들어 꿈을 꿨는지다. */
   dreamt = false;
+  /** 그리는 크기 배율이다(소라게 집 바꾸기처럼 사건이 개체 크기를 달리 보일 때 쓴다). */
+  scale = 1;
+  /** 굴·모래 속으로 들어간 정도(0..1)와 목표다. 사건이 숨었다 나오게 할 때 쓴다. */
+  sink = 0;
+  sinkTo = 0;
 
   alpha(): number {
     const base = Math.min(Math.min(this.age / 1.5, 1), Math.max((this.lifespan + LINGER - this.age) / 3, 0));
@@ -108,7 +114,7 @@ export class Actor {
   sunk(species: Species): number {
     if (this.burrow > 0) return species.frameH * Math.min(1, this.burrow / BURROW_SECONDS);
     if (this.emerging && this.age < 1.5) return species.frameH * (1 - this.age / 1.5);
-    return 0;
+    return species.frameH * this.sink;
   }
 
   /** 헤엄 리듬에 맞춘 상하 흔들림을 더한 화면 위치다. */
@@ -225,6 +231,10 @@ export class Aquarium {
   traits: Traits[];
   /** 포인터가 스쳐 터뜨린 기포 줄기 알(키)과 그 알이 다시 나타나는 시각이다. */
   popped = new Map<string, number>();
+  /** 지금 배경 컨셉 id다. 컨셉 전용 사건(오로라·룬 등)이 읽는다. 창 모드가 정한다. */
+  scene = "reef";
+  /** 사건이 잠깐 무대에 올리는 것들(빛기둥·해초 장난감·오리 등)이다. 그리는 쪽이 읽는다. */
+  setpiece = new SetPiece();
   time = 0;
   started: boolean;
   schools: School[] = [];
@@ -339,8 +349,17 @@ export class Aquarium {
    */
   feedActor(actor: Actor): FoodKind {
     const species = this.species[actor.species];
-    const kind = this.traits[actor.species].diet;
     const facing = faceTravel(species) ? actor.facing : 0;
+    const gift = this.traits[actor.species].gift;
+    if (gift !== null) {
+      // 사람은 먹이를 받는 대신 둘레에 나눠 준다(다이버는 가루 먹이를 짜 주고, 해녀는 미역을 풀어 준다).
+      const x = actor.x + facing * (species.frameW * 0.5 + 6);
+      this.drop(gift, x, actor.y - 4, 0);
+      if (gift === "Food") this.drop(gift, x + facing * 10, actor.y - 10, 0);
+      this.particles.push(new Particle("Heart", actor.x, actor.y - species.frameH * 0.5 - 3, 0, -10, 1.4, 0));
+      return gift;
+    }
+    const kind = this.traits[actor.species].diet;
     let x: number;
     let y: number;
     if (grounded(species)) {
@@ -485,6 +504,10 @@ export class Aquarium {
       actor.retarget = f32(actor.retarget - dt);
       actor.emit = f32(actor.emit - dt);
       actor.roll = Math.max(f32(actor.roll - dt), 0);
+      if (actor.sink !== actor.sinkTo) {
+        const step = dt * 2.5;
+        actor.sink = actor.sink < actor.sinkTo ? Math.min(actor.sinkTo, actor.sink + step) : Math.max(actor.sinkTo, actor.sink - step);
+      }
       if (actor.mood !== null) {
         stepMood(this, actor, species, dt, spawned);
       }

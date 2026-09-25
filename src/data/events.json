@@ -40,5 +40,17 @@
   "w": 26,
   "h": 36,
   "frames": 1
+ },
+ "shell": {
+  "texture": "assets/fx/shell.png",
+  "w": 24,
+  "h": 18,
+  "frames": 1
+ },
+ "duck": {
+  "texture": "assets/fx/duck.png",
+  "w": 22,
+  "h": 20,
+  "frames": 1
  }
 }

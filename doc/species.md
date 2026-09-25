@@ -1,4 +1,4 @@
-# 생물 도감 (230종)
+# 생물 도감 (233종)
 
 모든 스프라이트는 오른쪽을 바라보는 게임 해상도 원본이며, 런타임이 왼쪽으로 갈 때만 뒤집는다.
 
@@ -225,6 +225,9 @@
 | ![개복치](species/sunfish.png) | `sunfish` | 개복치 (Ocean sunfish) | 느린 대형 유영 | 낮·밤 | 8 |  |
 | ![새끼 바다거북](species/baby-turtle.png) | `baby-turtle` | 새끼 바다거북 (Baby sea turtle) | 지느러미 활공 | 낮·밤 | 8 |  |
 | ![산갈치](species/oarfish.png) | `oarfish` | 산갈치 (Giant oarfish) | 꼬리 물결 유영 | 낮·밤 | 6 |  |
+| ![아델리펭귄](species/adelie-penguin.png) | `adelie-penguin` | 아델리펭귄 (Adélie penguin) | 지느러미 활공 | 낮·밤 | 8 |  |
+| ![해녀](species/haenyeo.png) | `haenyeo` | 해녀 (Haenyeo) | 꼬리 물결 유영 | 낮·밤 | 6 |  |
+| ![인어공주](species/mermaid.png) | `mermaid` | 인어공주 (Mermaid) | 꼬리 물결 유영 | 낮·밤 | 6 |  |
 | ![흰긴수염고래](species/blue-whale.png) | `blue-whale` | 흰긴수염고래 (Blue whale) | 느린 대형 유영 | 낮·밤 | 8 |  |
 | ![혹등고래](species/humpback-whale.png) | `humpback-whale` | 혹등고래 (Humpback whale) | 느린 대형 유영 | 낮·밤 | 8 |  |
 | ![범고래](species/orca.png) | `orca` | 범고래 (Orca) | 느린 대형 유영 | 낮·밤 | 8 |  |

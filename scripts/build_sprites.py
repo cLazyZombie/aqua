@@ -54,12 +54,15 @@ VISITORS = [
     ("sunfish", "Ocean sunfish", "개복치", 58, "giant"),
     ("baby-turtle", "Baby sea turtle", "새끼 바다거북", 20, "glide"),
     ("oarfish", "Giant oarfish", "산갈치", 200, "fish"),
-    ("diver", "Scuba diver", "잠수부", 64, "fish"),
+    ("diver", "Scuba diver", "아쿠아다이버", 64, "fish"),
+    ("adelie-penguin", "Adélie penguin", "아델리펭귄", 30, "glide"),
+    ("haenyeo", "Haenyeo", "해녀", 58, "fish"),
+    ("mermaid", "Mermaid", "인어공주", 56, "fish"),
 ]
 
 # 먼 층 실루엣(동작 프레임)과 물건(한 장)이다. 조명 없이 텍스처로만 그린다.
 FAR_SHEETS = [("giant-squid", 150, "squid"), ("submarine", 70, "rigid")]
-ITEMS = [("anchor", 30), ("chest-closed", 30), ("chest-open", 30), ("bottle", 24), ("basket", 20)]
+ITEMS = [("anchor", 30), ("chest-closed", 30), ("chest-open", 30), ("bottle", 24), ("basket", 20), ("shell", 18), ("duck", 16)]
 
 FRAMES = {
     "rigid": 2, "eel": 6, "creep": 4, "sessile": 8,

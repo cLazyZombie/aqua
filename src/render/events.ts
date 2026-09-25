@@ -79,8 +79,18 @@ export function appendCurrent(frame: Frame, game: Aquarium): void {
 /// 가라앉는 물건과 줄에 매달린 간식 바구니.
 export function appendObjects(frame: Frame, game: Aquarium, assets: SceneAssets): void {
   for (const item of game.debris) {
+    // 얼음 조각은 빙하 바다 소품 가운데 얼음 덩어리 그림을 쓴다.
+    const ice = assets.props.find((prop) => prop.name === "ice-set-03");
     const sheet =
-      item.kind === "Anchor" ? assets.anchor : item.kind === "Chest" ? (item.open ? assets.chestOpen : assets.chestClosed) : assets.bottle;
+      item.kind === "Anchor"
+        ? assets.anchor
+        : item.kind === "Chest"
+          ? item.open
+            ? assets.chestOpen
+            : assets.chestClosed
+          : item.kind === "Ice" && ice
+            ? { texture: ice.texture, w: ice.w, h: ice.h, frames: 1 }
+            : assets.bottle;
     const tilt = item.landed === null ? Math.sin(game.time * 1.3 + item.h) * 0.15 : 0;
     const sprite = pixelSprite(item.x, item.y - (sheet.h - item.h) * 0.5, sheet.w, sheet.h, fullUv(), rgba(255, 255, 255, item.alpha()), -11);
     sprite.rotation = tilt;
@@ -147,6 +157,7 @@ export function appendLights(frame: Frame, game: Aquarium, assets: SceneAssets):
   }
   const specks: [number, number, number, number][] = [];
   const love: Sprite[] = [];
+  const fireworks: Sprite[] = [];
   for (const particle of game.particles) {
     const fade = particle.remaining();
     const { x, y } = particle;
@@ -229,6 +240,42 @@ export function appendLights(frame: Frame, game: Aquarium, assets: SceneAssets):
         bloom.push(dot(x, y, 3, rgba(120, 200, 255, fade)));
         break;
       }
+      case "Donut": {
+        // 도넛 기포 고리: 커지며 떠오르는 타원 테두리(옆에서 본 고리).
+        const grow = Math.min(1, particle.age / 1.5);
+        const rx = 5 + grow * 7;
+        const ry = rx * 0.42;
+        const points = 22;
+        for (let point = 0; point < points; point++) {
+          const angle = (point / points) * Math.PI * 2 + Math.sin(game.time * 3) * 0.1;
+          const px = x + Math.cos(angle) * rx;
+          const py = y + Math.sin(angle) * ry;
+          const front = Math.sin(angle) > 0;
+          love.push(pixelRect(px, py, 1, 1, fullUv(), rgba(front ? 235 : 190, front ? 250 : 225, 255, fade * (front ? 0.9 : 0.55)), 36));
+        }
+        break;
+      }
+      case "Fry": {
+        // 갓 태어난 새끼: 1x2 픽셀. 흰동가리 치어(seed 0.9 이상)는 주황, 새끼 해마는 연한 금빛.
+        const color = particle.seed >= 0.9 ? rgba(255, 150, 80, fade) : rgba(255, 214, 150, fade);
+        love.push(pixelRect(x, y, 1, 2, fullUv(), color, 36));
+        break;
+      }
+      case "Firework": {
+        const palette: [number, number, number][] = [
+          [255, 120, 170],
+          [255, 214, 90],
+          [120, 230, 255],
+          [170, 255, 120],
+          [190, 140, 255],
+          [255, 160, 90],
+        ];
+        const tone = palette[Math.min(5, Math.floor(particle.seed * 6))];
+        // 불꽃은 비네트 위(order 41)에 2픽셀로 그려 어두운 밤 수면에서도 또렷하다.
+        fireworks.push(pixelSprite(x, y, 2, 2, fullUv(), rgb(tone, fade), 41));
+        if (fade > 0.4) bloom.push(dot(x, y, 3, rgb(tone, fade * 0.7)));
+        break;
+      }
       case "Love": {
         // 교감 때 떠오르는 큰 하트(7x6). 가산이 아니라 덮어 그려 밝은 낮에도 또렷하다.
         const a = Math.min(1, fade * 1.6);
@@ -251,6 +298,7 @@ export function appendLights(frame: Frame, game: Aquarium, assets: SceneAssets):
   }
   frame.layers.push(solids("event-ink", "alpha", glow.filter((s) => s.order === 12)));
   frame.layers.push(solids("love", "alpha", love));
+  frame.layers.push(solids("fireworks", "additive", fireworks));
   frame.layers.push(solids("event-glow", "additive", glow.filter((s) => s.order !== 12)));
   frame.layers.push(
     textured(

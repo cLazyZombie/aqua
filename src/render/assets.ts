@@ -76,6 +76,8 @@ export interface SceneAssets {
   chestOpen: Sheet;
   bottle: Sheet;
   basket: Sheet;
+  shell: Sheet;
+  duck: Sheet;
   props: Prop[];
   species: SpeciesArt[];
 }
@@ -200,6 +202,8 @@ export async function loadSceneAssets(catalog: Species[], sceneId: string, layou
     chestOpen: await sheet("chest-open", { texture: "assets/fx/chest-open.png", w: 36, h: 36, frames: 1 }),
     bottle: await sheet("bottle", { texture: "assets/fx/bottle.png", w: 30, h: 21, frames: 1 }),
     basket: await sheet("basket", { texture: "assets/fx/basket.png", w: 20, h: 24, frames: 1 }),
+    shell: await sheet("shell", { texture: "assets/fx/shell.png", w: 18, h: 14, frames: 1 }),
+    duck: await sheet("duck", { texture: "assets/fx/duck.png", w: 16, h: 14, frames: 1 }),
     props: loadedProps,
     species: await species,
   };

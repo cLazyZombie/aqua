@@ -42,3 +42,21 @@ body {
   -webkit-font-smoothing: none;
   font-smooth: never;
 }
+
+/* 소리 켜기/끄기 같은 짧은 알림: 오른쪽 위에 잠깐 떴다 사라진다. */
+#toast {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-family: Galmuri, monospace;
+  font-size: 16px;
+  color: #f0fdfa;
+  text-shadow: 2px 2px 0 #04102c;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+#toast.show {
+  opacity: 1;
+}

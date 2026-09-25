@@ -27,6 +27,9 @@ import { remEuclid, retain } from "./num";
  * - Love: 교감으로 떠오르는 큰 하트
  * - Print: 모래 위 발자국·기어간 줄·물건이 파인 자국(seed 0 점, 1 줄, 2 파임. 줄은 vx에 방향을 둔다)
  * - Pop: 포인터가 스쳐 터진 기포의 작은 고리
+ * - Donut: 흰고래·다이버가 부는 도넛 모양 기포 고리(천천히 커지며 떠오른다)
+ * - Fry: 갓 태어난 치어·새끼 해마(seed 0.9 이상은 흰동가리 주황)
+ * - Firework: 수면 위 불꽃 한 알(seed가 색)
  */
 export type ParticleKind =
   | "Dust"
@@ -51,7 +54,10 @@ export type ParticleKind =
   | "Zap"
   | "Love"
   | "Print"
-  | "Pop";
+  | "Pop"
+  | "Donut"
+  | "Fry"
+  | "Firework";
 
 export class Particle {
   kind: ParticleKind;
@@ -198,6 +204,26 @@ export function stepParticles(particles: Particle[], dt: number, time: number, c
       case "Print":
       case "Pop":
         break;
+      case "Fry": {
+        // 갓 태어난 새끼는 흩어지며 꼬물꼬물 천천히 떠오른다.
+        particle.x += (particle.vx + Math.sin(time * 5 + particle.seed * 17) * 3 + current * 0.5) * dt;
+        particle.y += (particle.vy + Math.cos(time * 4 + particle.seed * 11) * 2) * dt;
+        particle.vx *= 1 - dt * 0.6;
+        particle.vy = particle.vy * (1 - dt * 0.6) - 1.5 * dt;
+        break;
+      }
+      case "Donut": {
+        particle.x += (particle.vx + current * 0.5) * dt;
+        particle.y += particle.vy * dt;
+        break;
+      }
+      case "Firework": {
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.vx *= 1 - dt * 1.8;
+        particle.vy = particle.vy * (1 - dt * 1.8) + 6 * dt;
+        break;
+      }
       case "Bubble": {
         particle.x += (particle.vx + Math.sin(time * 3 + particle.seed * 9) * 3 + current * 0.8) * dt;
         particle.y += particle.vy * dt;
